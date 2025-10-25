@@ -1,1 +1,1 @@
-export const DB_NAME=blogenv
+export const DB_NAME="blognEnv"
