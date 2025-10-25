@@ -13,5 +13,4 @@ import usoerRouter from "./router/user.router.js"
 app.use("api/v1/user", usoerRouter)
 
 
-
 export {app}
