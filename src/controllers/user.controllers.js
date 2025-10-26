@@ -21,7 +21,6 @@ const genrateAccessAndRefreshToken = async(userId) => {
     }
 }
 
-
 const registerUser = asyncHandler( async(req, res) => {
     const {username, email, password} = req.body
     if([username, email, password].some((field)=> field?.trim() === "")){
@@ -129,4 +128,14 @@ const logOutUser= asyncHandler(async(req, res) => {
     )
 })
 
-export {registerUser, logInUser, logOutUser}
+const getCurrentUser = asyncHandler( async(req, res) => {
+    return res.status(200)
+    .json(
+        new ApiResponse(
+            200, 
+            req.user, 
+            "Current User fatched successfully."
+        )
+    )
+})
+export {registerUser, logInUser, logOutUser, getCurrentUser}
