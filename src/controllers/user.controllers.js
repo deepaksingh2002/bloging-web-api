@@ -65,7 +65,7 @@ const registerUser = asyncHandler( async(req, res) => {
     )
 })
 
-const LogInUser= asyncHandler(async(req, res, next) => {
+const logInUser= asyncHandler(async(req, res) => {
     //req from body email, username, password.
     //check user is exist or not.
     //check password
@@ -110,4 +110,23 @@ const LogInUser= asyncHandler(async(req, res, next) => {
 
 })
 
-export {registerUser, LogInUser}
+const logOutUser= asyncHandler(async(req, res) => {
+    await User.findByIdAndUpdate(req.user._id,{
+        $unset:{
+            refreshToken: 1
+        }
+    },{new: true})
+
+    const options={
+            httpOnly: true,
+            secure: true
+        }
+    return res.status(200)
+    .cookie("accessToken", options)
+    .cookie("refreshToken", options)
+    .json(
+        new ApiResponse(200, {}, "User LogOut seccessfully")
+    )
+})
+
+export {registerUser, logInUser, logOutUser}
