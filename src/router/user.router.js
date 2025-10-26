@@ -5,10 +5,12 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.route("/register",
+router.route("/register").post(
     upload.fields({name: "avatar", maxCount: 1}),
     registerUser
 )
+
+router.route
 
 
 export default router
