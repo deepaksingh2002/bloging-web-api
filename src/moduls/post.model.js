@@ -15,7 +15,9 @@ const postSchema = new Schema(
             required: true
         },
         catagry: {
-            type: String
+            type: String,
+            enum: ["Technology", "Health", "Science", "Sports", "Entertainment"],
+            default: "Technology"
         },
         
         views: {
