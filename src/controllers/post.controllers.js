@@ -37,6 +37,8 @@ const createPost = asyncHandler(async (req, res) => {
     });
 });
 
+
+
 const getPosts = asyncHandler(async (req, res) => {
     const posts = await Post.find().populate("owner", "username");
     res.status(200).json({
@@ -44,5 +46,6 @@ const getPosts = asyncHandler(async (req, res) => {
         posts
     });
 });
+
 
 export { createPost, getPosts  };
