@@ -2,12 +2,12 @@ import {asyncHandler} from "../utils/asyncHandler";
 import { Post  } from "../moduls/post.model";
 import { ApiError } from "../utils/ApiError";
 import { uploadOnCloudinary } from "../utils/cloudnary";
+import { ApiResponse } from "../utils/ApiResponse";
 
 const createPost = asyncHandler(async (req, res) => {
     const { title, thumbnill, content, catagry } = req.body;
 
     if (!title || !thumbnill || !content) {
-        res.status(400);
         throw new ApiError(404, "All fields are required");
     }
 
@@ -31,21 +31,31 @@ const createPost = asyncHandler(async (req, res) => {
         catagry,
         owner: req.user._id
     })
-    res.status(201).json({
-        success: true,
-        post
-    });
+    res.status(201).json(
+        new ApiResponse(201, post, "Post created successfully")
+    );
 });
 
 
 
 const getPosts = asyncHandler(async (req, res) => {
     const posts = await Post.find().populate("owner", "username");
-    res.status(200).json({
-        success:true,
-        posts
-    });
+    res.status(200).json(
+        new ApiResponse(200, posts, "get all posts successfully")
+    );
+});
+
+const getPostById = asyncHandler(async (req, res) => {
+    const { postId } = req.params;
+    const post = await Post.findById(postId).populate("owner", "username");
+    if (!post) {
+        throw new ApiError(404, "Post not found");
+    }
+    res.status(200).json(
+        new ApiResponse(200, post, "get post by id successfully")
+    );
 });
 
 
-export { createPost, getPosts  };
+
+export { createPost, getPosts, getPostById };
