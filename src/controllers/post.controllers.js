@@ -57,5 +57,20 @@ const getPostById = asyncHandler(async (req, res) => {
 });
 
 
+const deletePost = asyncHandler(async (req, res) => {
+    const {postId} = req.params;
+    if (!postId) {
+        throw new ApiError(404, "Post ID is required");
+    }
+    const post = await Post.findByIdAndDelete(postId);
+    if (!post) {
+        throw new ApiError(404, "Post not found");
+    } 
+    res.status(200).json(
+        new ApiResponse(200,"Post deleted successfully")
+    );
+});
 
-export { createPost, getPosts, getPostById };
+
+
+export { createPost, getPosts, getPostById, deletePost };
