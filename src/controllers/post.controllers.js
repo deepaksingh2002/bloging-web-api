@@ -40,11 +40,11 @@ const createPost = asyncHandler(async (req, res) => {
     );
 });
 
-
-
-
 const getPosts = asyncHandler(async (req, res) => {
     const posts = await Post.find().populate("owner", "username");
+    if (!posts || posts.length === 0) {
+        throw new ApiError(404, "Posts not found");
+    }
     res.status(200).json(
         new ApiResponse(200, posts, "get all posts successfully")
     );
@@ -121,7 +121,7 @@ const getPostById = asyncHandler(async (req, res) => {
     if (!post) {
         throw new ApiError(404, "Post not found");
     }
-    res.status(200).json(
+    returnres.status(200).json(
         new ApiResponse(200, post, "get post by id successfully")
     );
 });
@@ -130,18 +130,27 @@ const getPostById = asyncHandler(async (req, res) => {
 const deletePost = asyncHandler(async (req, res) => {
     const {postId} = req.params;
     if (!postId) {
-        throw new ApiError(404, "Post ID is required");
+        throw new ApiError(400, "Post ID is required");
     }
     const post = await Post.findByIdAndDelete(postId);
-    if (!post) {
+    if(!post){
         throw new ApiError(404, "Post not found");
-    } 
-    res.status(200).json(
-        new ApiResponse(200,"Post deleted successfully")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, null, "Post deleted successfully")
     );
 });
 
 const updatePost = asyncHandler(async (req, res) => {
+    // Step 1: Check existing post
+    // Step 2: Handle thumbnail upload (via Multer)
+    // Upload to Cloudinary
+    // Delete local file safely (await ensures it completes)
+    // Delete old local thumbnail
+    // Step 3: Update post fields
+    // Step 4: Send success response
+
   const { title, content, catagry } = req.body;
   const { postId } = req.params;
 
@@ -149,20 +158,17 @@ const updatePost = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Post ID is required");
   }
 
-  // Step 1: Check existing post
   const existingPost = await Post.findById(postId);
   if (!existingPost) {
     throw new ApiError(404, "Post not found");
   }
 
-  // Step 2: Handle thumbnail upload (via Multer)
   let thumbnailPath = existingPost.thumbnill;
   let thumbnailUrl = existingPost.thumbnill;
 
   if (req.files && req.files.thumbnill && req.files.thumbnill[0]) {
     thumbnailPath = req.files.thumbnill[0].path;
 
-    // Upload to Cloudinary
     const uploadResponse = await uploadOnCloudinary(thumbnailPath);
     if (!uploadResponse || !uploadResponse.url) {
       throw new ApiError(500, "Error while uploading thumbnail to Cloudinary");
@@ -170,18 +176,15 @@ const updatePost = asyncHandler(async (req, res) => {
 
     thumbnailUrl = uploadResponse.url;
 
-    // Delete local file safely (await ensures it completes)
     if (fs.existsSync(thumbnailPath)) {
       await fs.promises.unlink(thumbnailPath);
     }
 
-    // Delete old local thumbnail
     if (existingPost.thumbnill && fs.existsSync(existingPost.thumbnill)) {
       await fs.promises.unlink(existingPost.thumbnill);
     }
   }
 
-  // Step 3: Update post fields
   const updatedPost = await Post.findByIdAndUpdate(
     postId,
     {
@@ -197,14 +200,10 @@ const updatePost = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Failed to update post");
   }
 
-  // Step 4: Send success response
   return res
     .status(200)
     .json(new ApiResponse(200, updatedPost, "Post updated successfully"));
 });
-
-    
-
 
 
 export { createPost, getPosts, getPostById, deletePost, updatePost };
