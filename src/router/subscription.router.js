@@ -5,10 +5,14 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.route("/toggleSubscription/:channelId").post(verifyJWT, toggleSubscription);
+router.use(verifyJWT); // Apply verifyJWT middleware to all routes in this file
 
-router.route("/getChannelSubscribers/:channelId").get(verifyJWT, getUserChannelSubscribers);
+router
+    .route("/c/:channelId")
+    .get(getSubscribedChannels)
+    .post(toggleSubscription);
 
-router.route("/getSubscribedChannels/:subscriberId").get(verifyJWT, getSubscribedChannels);
+router.route("/u/:subscriberId").get(getUserChannelSubscribers);
+
 
 export default router;
