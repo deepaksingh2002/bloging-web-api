@@ -21,7 +21,4 @@ router.route("/updatePost/:postId").put(verifyJWT,
 
 
 
-
-
-
 export default router;
