@@ -1,8 +1,8 @@
-import asyncHandler from "../utils/asyncHandler.js";
-import ApiError from "../utils/ApiError.js";
-import ApiResponse from "../utils/ApiResponse.js";
-import Post from "../models/post.model.js";
-import Like from "../models/like.model.js";
+import {asyncHandler} from "../utils/asyncHandler.js";
+import {ApiError} from "../utils/ApiError.js";
+import {ApiResponse} from "../utils/ApiResponse.js";
+import {Post} from "../models/post.model.js";
+import {Like } from "../models/likes.model.js";
 
 const togglePostLike = asyncHandler(async (req, res) => {
     const { postId } = req.params;
@@ -62,7 +62,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
         return res.status(200).json(
             new ApiResponse(200, null, "Comment liked successfully")
         );
-    }   
+    }
 });
 
 const getLikedPosts = asyncHandler(async (req, res) => {

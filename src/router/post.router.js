@@ -15,9 +15,9 @@ router.route("/getPost/:postId").get(getPostById);
 
 router.route("/deletePost/:postId").delete(verifyJWT, deletePost);
 
-router.route("/updatePost/:postId").put(verifyJWT,
-    upload.fields([{ name: "thumbnill", maxCount: 1 }]),
-    updatePost);
+// router.route("/updatePost/:postId").put(verifyJWT,
+//     upload.fields([{ name: "thumbnill", maxCount: 1 }]),
+//     updatePost);
 
 
 

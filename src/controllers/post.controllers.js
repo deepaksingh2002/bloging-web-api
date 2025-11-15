@@ -1,5 +1,5 @@
-import {asyncHandler} from "../utils/asyncHandler.js";
-import { Post  } from "../moduls/post.model.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { Post } from "../models/post.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { uploadOnCloudinary } from "../utils/cloudnary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -12,7 +12,7 @@ const createPost = asyncHandler(async (req, res) => {
     }
 
     const thumbnillLocalPath = req.files?.thumbnill[0]?.path;
-    if (!thumbnillLocalPath){
+    if (!thumbnillLocalPath) {
         throw new ApiError(404, "Thumbnail is required");
     }
     if (catagry && !["Technology", "Health", "Science", "Sports", "Entertainment"].includes(catagry)) {
@@ -22,7 +22,7 @@ const createPost = asyncHandler(async (req, res) => {
     const thumbnillUpload = await uploadOnCloudinary(thumbnillLocalPath);
     if (!thumbnillUpload) {
         throw new ApiError(500, "Error while uploading thumbnail");
-    }   
+    }
 
     const post = await Post.create({
         title,
@@ -58,16 +58,16 @@ const getPostById = asyncHandler(async (req, res) => {
 
 
 const deletePost = asyncHandler(async (req, res) => {
-    const {postId} = req.params;
+    const { postId } = req.params;
     if (!postId) {
         throw new ApiError(404, "Post ID is required");
     }
     const post = await Post.findByIdAndDelete(postId);
     if (!post) {
         throw new ApiError(404, "Post not found");
-    } 
+    }
     res.status(200).json(
-        new ApiResponse(200,"Post deleted successfully")
+        new ApiResponse(200, "Post deleted successfully")
     );
 });
 
