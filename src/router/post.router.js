@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { upload } from "../middlewares/multer.middleware";
+import { upload } from "../middlewares/multer.middleware.js";
 import {createPost, getPosts, getPostById, deletePost} from "../controllers/post.controllers.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 

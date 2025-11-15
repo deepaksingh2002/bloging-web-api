@@ -1,6 +1,6 @@
-import asyncHandler from "../helpers/asyncHandler.js";
-import ApiError from "../helpers/ApiError.js";
-import ApiResponse from "../helpers/ApiResponse.js";
+import asyncHandler from "../utils/asyncHandler.js";
+import ApiError from "../utils/ApiError.js";
+import ApiResponse from "../utils/ApiResponse.js";
 import Post from "../models/post.model.js";
 import Like from "../models/like.model.js";
 

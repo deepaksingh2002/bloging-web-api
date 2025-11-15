@@ -1,10 +1,10 @@
-import {asyncHandler} from "../utils/asyncHandler";
-import { Post  } from "../moduls/post.model";
-import { ApiError } from "../utils/ApiError";
-import { uploadOnCloudinary } from "../utils/cloudnary";
-import { ApiResponse } from "../utils/ApiResponse";
+import {asyncHandler} from "../utils/asyncHandler.js";
+import { Post  } from "../moduls/post.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { uploadOnCloudinary } from "../utils/cloudnary.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import fs from "fs";
-import { fileURLToPath } from "url";
+
 
 const createPost = asyncHandler(async (req, res) => {
     const { title, thumbnill, content, catagry } = req.body;
