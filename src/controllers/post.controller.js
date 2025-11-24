@@ -13,7 +13,7 @@ const createPost = asyncHandler(async (req, res) => {
     }
 
     const thumbnailLocalPath = req.file?.buffer;
-    console.log("thumbnailLocalPath::", thumbnailLocalPath)
+    // console.log("thumbnailLocalPath::", thumbnailLocalPath)
     if (!thumbnailLocalPath) {
         throw new ApiError(400, "Thumbnail is required");
     }

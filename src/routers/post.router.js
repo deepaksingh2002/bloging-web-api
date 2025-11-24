@@ -5,17 +5,17 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.route("/createPost").post(verifyJWT,
+router.route("/create-post").post(verifyJWT,
     upload.single("thumbnail"), 
     createPost);
 
-router.route("/getPost").get(getPosts);
+router.route("/get-post").get(getPosts);
 
-router.route("/getPost/:postId").get(getPostById);
+router.route("/get-post/:post-id").get(getPostById);
 
-router.route("/deletePost/:postId").delete(verifyJWT, deletePost);
+router.route("/delete-post/:post-id").delete(verifyJWT, deletePost);
 
-router.route("/updatePost/:postId").patch(verifyJWT,
+router.route("/update-post/:post-id").patch(verifyJWT,
     upload.single("thumbnail"), 
     updatePost);
 
