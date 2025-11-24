@@ -16,7 +16,7 @@ const postSchema = new Schema(
         },
         catagry: {
             type: String,
-            enum: ["Technology", "Health", "Science", "Sports", "Entertainment"],
+            enum: ["Tech","Technology", "Health", "Science", "Sports", "Entertainment"],
             default: "Technology"
         },
 

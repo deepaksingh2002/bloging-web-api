@@ -12,12 +12,13 @@ const createPost = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All fields are required");
     }
 
-    const thumbnailLocalPath = req.file?.buffer; // This was correct, but good to confirm.
+    const thumbnailLocalPath = req.file?.buffer;
+    console.log("thumbnailLocalPath::", thumbnailLocalPath)
     if (!thumbnailLocalPath) {
         throw new ApiError(400, "Thumbnail is required");
     }
 
-    if (catagry && !["Technology", "Health", "Science", "Sports", "Entertainment"].includes(catagry)) {
+    if (catagry && !["Tech","Technology", "Health", "Science", "Sports", "Entertainment"].includes(catagry)) {
         throw new ApiError(400, "Invalid category");
     }
 
@@ -26,7 +27,7 @@ const createPost = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Thumbnail upload failed");
     }
 
-    await fs.promises.unlink(thumbnailLocalPath);
+    //await fs.promises.unlink(thumbnailLocalPath);
 
     const post = await Post.create({
         title,
