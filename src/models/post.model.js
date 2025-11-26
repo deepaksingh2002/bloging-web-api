@@ -6,7 +6,7 @@ const postSchema = new Schema(
             type: String,
             required: true
         },
-        thumbnill: {
+        thumbnail: {
             type: String, // cloudnary url
             required: true
         },
@@ -16,10 +16,10 @@ const postSchema = new Schema(
         },
         catagry: {
             type: String,
-            enum: ["Technology", "Health", "Science", "Sports", "Entertainment"],
+            enum: ["Tech","Technology", "Health", "Science", "Sports", "Entertainment"],
             default: "Technology"
         },
-        
+
         views: {
             type: Number,
             default: 0
@@ -32,7 +32,7 @@ const postSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: 'User'
         }
-    },{timestamps: true}
+    }, { timestamps: true }
 )
 
 export const Post = mongoose.model("Post", postSchema)

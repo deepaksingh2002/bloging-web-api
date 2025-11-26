@@ -1,18 +1,17 @@
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import Jwt from "jsonwebtoken";
-import { config } from "../config/config.js"
+import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
 
 
 
-export const verifyJWT = asyncHandler(async (req, _, next) => {
+export const verifyJWT = asyncHandler(async (req, res, next) => {
     try {
-        const token = req.cookies.accessToken || req.header("Authentication")?.replace("Bearer", "");
-        if (!token) {
+        const token = req.cookies.accessToken || req.header("Authorization")?.replace("Bearer ", "");       
+         if (!token) {
             throw new ApiError(401, "Invalid access token.");
         }
-        const decodedToken = Jwt.verify(token, config.accessTokenSecret);
+        const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         const user = await User.findById(decodedToken?._id).select("-password -refreshToken");
 
         if (!user) {
