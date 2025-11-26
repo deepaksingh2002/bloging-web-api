@@ -5,14 +5,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-<<<<<<< HEAD
     "start": "node index.js",
     "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
-=======
-  "start": "node -r dotenv/config index.js",
-  "dev": "nodemon -r dotenv/config index.js",
-  "test": "echo \"Error: no test specified\" && exit 1"
->>>>>>> dd394dc21d442a5c9358c8fbab81b55a905981bc
   },
   "author": "Deepak singh",
   "license": "ISC",
