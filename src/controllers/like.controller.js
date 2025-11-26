@@ -1,8 +1,9 @@
-import {asyncHandler} from "../utils/asyncHandler.js";
-import {ApiError} from "../utils/ApiError.js";
-import {ApiResponse} from "../utils/ApiResponse.js";
-import {Post} from "../models/post.model.js";
-import {Like } from "../models/likes.model.js";
+import { asyncHandler } from "../utils/AsyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { Post } from "../models/post.model.js";
+import { Like } from "../models/likes.model.js";
+import { Comment } from "../models/comment.model.js";
 
 const togglePostLike = asyncHandler(async (req, res) => {
     const { postId } = req.params;
@@ -17,7 +18,7 @@ const togglePostLike = asyncHandler(async (req, res) => {
 
     if (existingLike) {
         // If like exists, remove it (unlike)
-        await Like.findByIdAndDelete(existingLike._id);
+        await Like.findByIdAndDelete(existingLike._id); // This was correct
         return res.status(200).json(
             new ApiResponse(200, null, "Post unliked successfully")
         );
@@ -25,7 +26,7 @@ const togglePostLike = asyncHandler(async (req, res) => {
         // If like does not exist, create it (like)
         const newLike = new Like({
             post: postId,
-            user: userId
+            user: userId // This was correct
         });
         await newLike.save();
         return res.status(200).json(
@@ -48,7 +49,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
 
     if (existingLike) {
         // If like exists, remove it (unlike)
-        await Like.findByIdAndDelete(existingLike._id);
+        await Like.findByIdAndDelete(existingLike._id); // This was correct
         return res.status(200).json(
             new ApiResponse(200, null, "Comment unliked successfully")
         );
@@ -56,7 +57,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
         // If like does not exist, create it (like)
         const newLike = new Like({
             comment: commentId,
-            user: userId
+            user: userId // This was correct
         });
         await newLike.save();
         return res.status(200).json(
@@ -68,7 +69,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
 const getLikedPosts = asyncHandler(async (req, res) => {
     const userId = req.user._id;
 
-    const likedPosts = await Like.find({ user: userId }).populate('post');
+    const likedPosts = await Like.find({ user: userId }).populate('post'); // This was correct
 
     return res.status(200).json(
         new ApiResponse(200, likedPosts.map(like => like.post), "Liked posts fetched successfully")
