@@ -29,7 +29,7 @@ export const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All fields are required");
     }
     if(password?.length < 8) {
-        throw new ApiError(400, "Password must be at least 6 characters long")
+        throw new ApiError(400, "Password must be at least 8 characters long")
     }
     if(password){
         const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
