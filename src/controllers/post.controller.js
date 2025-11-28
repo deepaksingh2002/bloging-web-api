@@ -92,8 +92,8 @@ const updatePost = asyncHandler(async (req, res) => {
 
     let thumbnailUrl = existingPost.thumbnail;
 
-    if (req.files?.thumbnail?.[0]) { // This was correct
-        const thumbnailPath = req.files.thumbnail[0].path; // This was correct
+    if (req.file?.buffer) { 
+        const thumbnailPath = req.file?.buffer; 
         const uploaded = await uploadOnCloudinary(thumbnailPath);
 
         if (uploaded?.url) thumbnailUrl = uploaded.url;

@@ -18,7 +18,7 @@ const togglePostLike = asyncHandler(async (req, res) => {
 
     if (existingLike) {
         // If like exists, remove it (unlike)
-        await Like.findByIdAndDelete(existingLike._id); // This was correct
+        await Like.findByIdAndDelete(existingLike._id); 
         return res.status(200).json(
             new ApiResponse(200, null, "Post unliked successfully")
         );
@@ -26,7 +26,7 @@ const togglePostLike = asyncHandler(async (req, res) => {
         // If like does not exist, create it (like)
         const newLike = new Like({
             post: postId,
-            user: userId // This was correct
+            user: userId 
         });
         await newLike.save();
         return res.status(200).json(
@@ -57,7 +57,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
         // If like does not exist, create it (like)
         const newLike = new Like({
             comment: commentId,
-            user: userId // This was correct
+            user: userId 
         });
         await newLike.save();
         return res.status(200).json(
@@ -69,7 +69,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
 const getLikedPosts = asyncHandler(async (req, res) => {
     const userId = req.user._id;
 
-    const likedPosts = await Like.find({ user: userId }).populate('post'); // This was correct
+    const likedPosts = await Like.find({ user: userId }).populate('post'); 
 
     return res.status(200).json(
         new ApiResponse(200, likedPosts.map(like => like.post), "Liked posts fetched successfully")

@@ -23,10 +23,19 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 export const registerUser = asyncHandler(async (req, res) => {
     const { fullName, email, username, password } = req.body;
-    console.log("Req from body:: ", req.body);
+    // console.log("Req from body:: ", req.body);
 
     if ([fullName, email, username, password].some(f => !f || f.trim() === "")) {
         throw new ApiError(400, "All fields are required");
+    }
+    if(password?.length < 8) {
+        throw new ApiError(400, "Password must be at least 6 characters long")
+    }
+    if(password){
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!regex.test(password)) {
+            throw new ApiError(400, "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character");
+        }
     }
 
     const existedUser = await User.findOne({
