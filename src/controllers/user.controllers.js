@@ -22,16 +22,16 @@ const generateAccessAndRefreshToken = async (userId) => {
 };
 
 export const registerUser = asyncHandler(async (req, res) => {
-    const { fullName, email, username, password } = req.body;
+    const { fullName, email, password } = req.body;
     // console.log("Req from body:: ", req.body);
 
-    if ([fullName, email, username, password].some(f => !f || f.trim() === "")) {
+    if ([fullName, email, password].some(f => !f || f.trim() === "")) {
         throw new ApiError(400, "All fields are required");
     }
-    if(password?.length < 8) {
+    if (password?.length < 8) {
         throw new ApiError(400, "Password must be at least 8 characters long")
     }
-    if(password){
+    if (password) {
         const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
         if (!regex.test(password)) {
             throw new ApiError(400, "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character");
@@ -39,26 +39,45 @@ export const registerUser = asyncHandler(async (req, res) => {
     }
 
     const existedUser = await User.findOne({
-        $or: [{ username }, { email }]
+        email
     });
 
     if (existedUser) {
-        throw new ApiError(409, "User already exists");
+        throw new ApiError(409, "User with this email already exists");
+    }
+
+    // Generate a unique username from email
+    const baseUsername = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+    let username = baseUsername;
+    let isUsernameUnique = false;
+    let counter = 1;
+    while (!isUsernameUnique) {
+        const userWithUsername = await User.findOne({ username });
+        if (!userWithUsername) {
+            isUsernameUnique = true;
+        } else {
+            username = `${baseUsername}${counter}`;
+            counter++;
+        }
     }
 
     const avatarBuffer = req.file?.buffer;
-    if (!avatarBuffer) throw new ApiError(400, "Avatar is required");
+    let avatarUrl;
+    if (avatarBuffer) {
+        const avatar = await uploadOnCloudinary(avatarBuffer);
+        if (!avatar?.url) throw new ApiError(500, "Avatar upload failed");
+        avatarUrl = avatar.url;
+    }
 
-    const avatar = await uploadOnCloudinary(avatarBuffer);
-    if (!avatar?.url) throw new ApiError(500, "Avatar upload failed");
+    const user = await User.create(
+        { 
+            fullName, 
+            avatar: avatarUrl, 
+            email, 
+            password, 
+            username
 
-    const user = await User.create({
-        fullName,
-        avatar: avatar.url,
-        email,
-        password,
-        username: username.toLowerCase()
-    });
+         });
 
     const createdUser = await User.findById(user._id).select("-password -refreshToken");
 
@@ -84,8 +103,8 @@ export const logInUser = asyncHandler(async (req, res) => {
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
 
     const options = {
-    httpOnly: true,
-    secure: true
+        httpOnly: true,
+        secure: true
     }
 
     return res.status(200)
@@ -93,11 +112,11 @@ export const logInUser = asyncHandler(async (req, res) => {
         .cookie("refreshToken", refreshToken, options)
         .json(
             new ApiResponse(200,
-                 {
-                     user: loggedInUser, accessToken, refreshToken
-                 },
-                  "Logged in successfully"
-                )
+                {
+                    user: loggedInUser, accessToken, refreshToken
+                },
+                "Logged in successfully"
+            )
         );
 });
 
