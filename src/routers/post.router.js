@@ -9,7 +9,7 @@ router.route("/create-post").post(verifyJWT,
     upload.single("thumbnail"), 
     createPost);
 
-router.route("/get-post").get(getPosts);
+router.route("/getAll-post").get(getPosts);
 
 router.route("/get-post/:post-id").get(getPostById);
 
