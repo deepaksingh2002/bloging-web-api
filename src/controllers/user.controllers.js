@@ -21,7 +21,7 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
 };
 
-export const registerUser = asyncHandler(async (req, res) => {
+const registerUser = asyncHandler(async (req, res) => {
     const { fullName, email, password } = req.body;
     // console.log("Req from body:: ", req.body);
 
@@ -87,7 +87,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 });
 
 
-export const logInUser = asyncHandler(async (req, res) => {
+const logInUser = asyncHandler(async (req, res) => {
     const { email, username, password } = req.body;
 
     if (!(email || username)) throw new ApiError(400, "Email or Username is required");
@@ -129,13 +129,13 @@ export const logOutUser = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, {}, "Logged out successfully"));
 });
 
-export const getCurrentUser = asyncHandler(async (req, res) => {
+const getCurrentUser = asyncHandler(async (req, res) => {
     return res.status(200).json(
         new ApiResponse(200, req.user, "Current user fetched successfully")
     );
 });
 
-export const refreshAccessToken = asyncHandler(async( req, res) => {
+const refreshAccessToken = asyncHandler(async( req, res) => {
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
     if(!incomingRefreshToken){
@@ -178,3 +178,85 @@ export const refreshAccessToken = asyncHandler(async( req, res) => {
         throw new ApiError(401, error?.message || "Invaled refressh token")
     }
 });
+
+const userProfile = asyncHandler(async(req,res) => {
+    const { username } = req.params;
+
+    const user = await User.find({ username, fullName, avatar, bio })
+        .select("-password -refreshToken")
+        .pouplate("posts");
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, user, "User profile fetched successfully")
+    );
+});
+
+const updateUserProfile = asyncHandler(async(req,res) => {
+    const { fullName, bio } = req.body;
+
+    const updatedData = {};
+    if (fullName) updatedData.fullName = fullName;
+    if (bio) updatedData.bio = bio;
+
+    const updatedUser = await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: updatedData },
+        { new: true, runValidators: true }
+    ).select("-password -refreshToken");
+
+    return res.status(200).json(
+        new ApiResponse(200, updatedUser, "User profile updated successfully")
+    );
+});
+
+const updateUserAvatar = asyncHandler(async(req,res) => {
+    const avatarBuffer = req.file?.buffer;
+    if (!avatarBuffer) {
+        throw new ApiError(400, "Avatar file is required");
+    }
+
+    const avatar = await uploadOnCloudinary(avatarBuffer);
+    if (!avatar?.url) throw new ApiError(500, "Avatar upload failed");
+
+    const updatedUser = await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: { avatar: avatar.url } },
+        { new: true, runValidators: true }
+    ).select("-password -refreshToken");
+
+    return res.status(200).json(
+        new ApiResponse(200, updatedUser, "User avatar updated successfully")
+    );
+});
+
+const changeUserPassword = asyncHandler(async(req,res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+        throw new ApiError(400, "Current and new passwords are required");
+    }
+
+    const user = await User.findById(req.user._id);
+
+    const isCurrentPasswordValid = await user.isPasswordCorrect(currentPassword);
+    if (!isCurrentPasswordValid) {
+        throw new ApiError(401, "Current password is incorrect");
+    }
+
+    if (newPassword.length < 8) {
+        throw new ApiError(400, "New password must be at least 8 characters long");
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return res.status(200).json(
+        new ApiResponse(200, {}, "Password changed successfully")
+    );
+});
+
+export { registerUser, logInUser, logOutUser, getCurrentUser, refreshAccessToken, userProfile,updateUserProfile, changeUserPassword, updateUserAvatar };
