@@ -19,6 +19,4 @@ router.route("/update-post/:postId").patch(verifyJWT,
     upload.single("thumbnail"), 
     updatePost);
 
-router.patch("/like-post/:postId", verifyJWT, toggleLikePost);
-
 export default router;
