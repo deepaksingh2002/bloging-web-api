@@ -123,5 +123,27 @@ const updatePost = asyncHandler(async (req, res) => {
         new ApiResponse(200, updatedPost, "Post updated successfully")
     );
 });
+const toggleLikePost = asyncHandler(async (req, res) => {
+  const { postId } = req.params;
+  const userId = req.user._id;
 
-export { createPost, getPosts, getPostById, deletePost, updatePost };
+  const post = await Post.findById(postId);
+  if (!post) throw new ApiError(404, "Post not found");
+
+  const liked = post.likes.includes(userId);
+
+  if (liked) {
+    post.likes.pull(userId);
+  } else {
+    post.likes.push(userId);
+  }
+
+  await post.save();
+
+  return res.status(200).json(
+    new ApiResponse(200, post.likes, liked ? "Unliked" : "Liked")
+  );
+});
+
+
+export { createPost, getPosts, getPostById, deletePost, updatePost, toggleLikePost, };
