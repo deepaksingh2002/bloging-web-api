@@ -11,11 +11,11 @@ router.route("/create-post").post(verifyJWT,
 
 router.route("/getAll-post").get(getPosts);
 
-router.route("/get-post/:post-id").get(getPostById);
+router.route("/get-post/:postId").get(getPostById);
 
-router.route("/delete-post/:post-id").delete(verifyJWT, deletePost);
+router.route("/delete-post/:postId").delete(verifyJWT, deletePost);
 
-router.route("/update-post/:post-id").patch(verifyJWT,
+router.route("/update-post/:postId").patch(verifyJWT,
     upload.single("thumbnail"), 
     updatePost);
 

@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import fs from "fs";
+import mongoose from "mongoose";
 
 const createPost = asyncHandler(async (req, res) => {
     const { title, content, catagry } = req.body;
@@ -56,6 +57,10 @@ const getPosts = asyncHandler(async (req, res) => {
 
 const getPostById = asyncHandler(async (req, res) => {
     const { postId } = req.params;
+
+    if(!mongoose.Types.ObjectId.isValid(postId)){
+        throw new ApiError(400, "Invalid Post ID");
+    }
 
     const post = await Post.findById(postId).populate("owner", "username");
     if (!post) {
