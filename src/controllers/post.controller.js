@@ -44,7 +44,11 @@ const createPost = asyncHandler(async (req, res) => {
 });
 
 const getPosts = asyncHandler(async (req, res) => {
-    const posts = await Post.find().populate("owner", "username").lean();
+    const posts = await Post.find()
+        .select("title thumbnail owner createdAt likes")
+        .populate("owner", "username")
+        .sort({ createdAt: -1 })
+        .lean();
     if (!posts.length) {
         throw new ApiError(404, "No posts found");
     }
@@ -62,7 +66,9 @@ const getPostById = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid Post ID");
     }
 
-    const post = await Post.findById(postId).populate("owner", "username").lean();
+    const post = await Post.findById(postId)
+        .populate("owner", "username")
+        .lean();
     if (!post) {
         throw new ApiError(404, "Post not found");
     }
