@@ -67,7 +67,8 @@ const getPostById = asyncHandler(async (req, res) => {
     }
 
     const post = await Post.findById(postId)
-        .populate("owner", "username");
+        .populate("owner", "username")
+        .lean();
     if (!post) {
         throw new ApiError(404, "Post not found");
     }
