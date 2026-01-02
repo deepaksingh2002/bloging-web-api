@@ -15,7 +15,7 @@ router.route("/get-post/:postId").get(getPostById);
 
 router.route("/delete-post/:postId").delete(verifyJWT, deletePost);
 
-router.route("/update-post/:postId").patch(verifyJWT,
+router.route("/update-post/:postId").put(verifyJWT,
     upload.single("thumbnail"), 
     updatePost);
 
