@@ -10,37 +10,54 @@ const createPost = asyncHandler(async (req, res) => {
     const { title, content, catagry } = req.body;
 
     if (!title || !content) {
-        throw new ApiError(400, "All fields are required");
+        throw new ApiError(400, "Title and content are required");
     }
 
     const thumbnailLocalPath = req.file?.path;
-    // console.log("thumbnailLocalPath::", thumbnailLocalPath)
     if (!thumbnailLocalPath) {
         throw new ApiError(400, "Thumbnail is required");
     }
 
-    if (catagry && !["Tech","Technology", "Health", "Science", "Sports", "Entertainment"].includes(catagry)) {
+    const allowedCategories = [
+        "Tech",
+        "Technology",
+        "Health",
+        "Science",
+        "Sports",
+        "Entertainment"
+    ];
+
+    if (catagry && !allowedCategories.includes(catagry)) {
         throw new ApiError(400, "Invalid category");
     }
 
-    const thumbnailUpload = await uploadOnCloudinary(thumbnailLocalPath);
-    if (!thumbnailUpload?.url) {
-        throw new ApiError(500, "Thumbnail upload failed");
+    let thumbnailUpload;
+
+    try {
+        thumbnailUpload = await uploadOnCloudinary(thumbnailLocalPath);
+
+        if (!thumbnailUpload?.url) {
+            throw new ApiError(500, "Thumbnail upload failed");
+        }
+
+        const post = await Post.create({
+            title,
+            content,
+            catagry,
+            thumbnail: thumbnailUpload.url,
+            owner: req.user._id
+        });
+
+        return res.status(201).json(
+            new ApiResponse(201, post, "Post created successfully")
+        );
+
+    } finally {
+        // always cleanup temp file
+        if (thumbnailLocalPath) {
+            await fs.promises.unlink(thumbnailLocalPath).catch(() => {});
+        }
     }
-
-    await fs.promises.unlink(thumbnailLocalPath);
-
-    const post = await Post.create({
-        title,
-        thumbnail: thumbnailUpload.url,
-        content,
-        catagry,
-        owner: req.user._id
-    });
-
-    return res.status(201).json(
-        new ApiResponse(201, post, "Post created successfully")
-    );
 });
 
 const getPosts = asyncHandler(async (req, res) => {
@@ -57,7 +74,6 @@ const getPosts = asyncHandler(async (req, res) => {
         new ApiResponse(200, posts, "Posts fetched successfully")
     );
 });
-
 
 const getPostById = asyncHandler(async (req, res) => {
     const { postId } = req.params;
@@ -77,7 +93,6 @@ const getPostById = asyncHandler(async (req, res) => {
         new ApiResponse(200, post, "Post fetched successfully")
     );
 });
-
 
 const deletePost = asyncHandler(async (req, res) => {
     const { postId } = req.params;
@@ -141,11 +156,6 @@ const updatePost = asyncHandler(async (req, res) => {
         new ApiResponse(200, updatedPost, "Post updated successfully")
     );
 });
-
-
-
-
-
 
 
 export { createPost, getPosts, getPostById, deletePost, updatePost };
