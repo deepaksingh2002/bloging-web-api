@@ -1398,8 +1398,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 | Channel | Info |
 |---------|------|
 | **Email** | deepakksingh1202@gmail.com |
-| **GitHub** | deepaksingh2002 |
-| **LinkedIn** | www.linkedin.com/in/deepaksingh2002 |
+| **GitHub** |[github.com/deepaksingh2002](https://github.com/deepaksingh2002) |
+| **LinkedIn** | [www.linkedin.com/in/deepaksingh2002](https://www.linkedin.com/in/deepaksingh2002) |
 
 
 ---
