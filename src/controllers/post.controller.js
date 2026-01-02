@@ -6,6 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import fs from "fs";
 import mongoose from "mongoose";
 
+
 const createPost = asyncHandler(async (req, res) => {
     const { title, content, catagry } = req.body;
 
@@ -13,8 +14,7 @@ const createPost = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Title and content are required");
     }
 
-    const thumbnailLocalPath = req.file?.path;
-    if (!thumbnailLocalPath) {
+    if (!req.file?.path) {
         throw new ApiError(400, "Thumbnail is required");
     }
 
@@ -31,6 +31,7 @@ const createPost = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid category");
     }
 
+    const thumbnailLocalPath = req.file.path;
     let thumbnailUpload;
 
     try {
@@ -53,10 +54,8 @@ const createPost = asyncHandler(async (req, res) => {
         );
 
     } finally {
-        // always cleanup temp file
-        if (thumbnailLocalPath) {
-            await fs.promises.unlink(thumbnailLocalPath).catch(() => {});
-        }
+        // remove temp file
+        await fs.promises.unlink(thumbnailLocalPath).catch(() => {});
     }
 });
 
