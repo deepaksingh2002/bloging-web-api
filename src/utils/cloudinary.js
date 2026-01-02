@@ -28,3 +28,33 @@ export const uploadOnCloudinary = async (buffer) => {
         return null;
     }
 };
+
+export const deleteFromCloudinary = async (publicId) => {
+    try {
+        await cloudinary.uploader.destroy(publicId);
+    } catch (error) {
+        console.error("Cloudinary delete error:", error);
+    }
+};
+
+export const extractPublicId = (url) => {
+    if (!url) return null;
+
+    const withoutQuery = url.split("?")[0];
+
+    const parts = withoutQuery.split("/");
+    const uploadIndex = parts.indexOf("upload");
+
+    if (uploadIndex === -1) return null;
+
+    // everything after /upload/
+    const publicIdWithExt = parts
+        .slice(uploadIndex + 1)
+        .join("/");
+
+    // remove version (v123456)
+    const cleaned = publicIdWithExt.replace(/^v\d+\//, "");
+
+    // remove file extension
+    return cleaned.replace(/\.[^/.]+$/, "");
+};

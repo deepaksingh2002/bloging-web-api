@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Post } from "../models/post.model.js";
 import { ApiError } from "../utils/ApiError.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { uploadOnCloudinary, deleteFromCloudinary, extractPublicId } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import fs from "fs";
 import mongoose from "mongoose";
@@ -13,7 +13,7 @@ const createPost = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All fields are required");
     }
 
-    const thumbnailLocalPath = req.file?.buffer;
+    const thumbnailLocalPath = req.file?.path;
     // console.log("thumbnailLocalPath::", thumbnailLocalPath)
     if (!thumbnailLocalPath) {
         throw new ApiError(400, "Thumbnail is required");
@@ -28,7 +28,7 @@ const createPost = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Thumbnail upload failed");
     }
 
-    //await fs.promises.unlink(thumbnailLocalPath);
+    await fs.promises.unlink(thumbnailLocalPath);
 
     const post = await Post.create({
         title,
@@ -103,32 +103,47 @@ const updatePost = asyncHandler(async (req, res) => {
 
     let thumbnailUrl = existingPost.thumbnail;
 
-    if (req.file?.buffer) { 
-        const thumbnailPath = req.file?.buffer; 
-        const uploaded = await uploadOnCloudinary(thumbnailPath);
+    // If thumbnail is updated
+    if (req.file?.path) {
+        const uploaded = await uploadOnCloudinary(req.file.path);
 
-        if (uploaded?.url) thumbnailUrl = uploaded.url;
+        if (!uploaded?.url) {
+            throw new ApiError(500, "Thumbnail upload failed");
+        }
 
-        if (fs.existsSync(thumbnailPath)) {
-            await fs.promises.unlink(thumbnailPath);
+        thumbnailUrl = uploaded.url;
+
+        // delete temp file
+        await fs.promises.unlink(req.file.path);
+
+        // delete old thumbnail from cloudinary
+        if (existingPost.thumbnail) {
+            const publicId = extractPublicId(existingPost.thumbnail);
+            await deleteFromCloudinary(publicId);
         }
     }
 
     const updatedPost = await Post.findByIdAndUpdate(
         postId,
         {
-            title: title || existingPost.title,
-            thumbnail: thumbnailUrl,
-            content: content || existingPost.content,
-            catagry: catagry || existingPost.catagry
+            title: title ?? existingPost.title,
+            content: content ?? existingPost.content,
+            catagry: catagry ?? existingPost.catagry,
+            thumbnail: thumbnailUrl
         },
-        { new: true }
+        {
+            new: true,
+            runValidators: true
+        }
     );
 
     return res.status(200).json(
         new ApiResponse(200, updatedPost, "Post updated successfully")
     );
 });
+
+
+
 
 
 

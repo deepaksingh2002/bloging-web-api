@@ -2,8 +2,9 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
+import fs from "fs";
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -23,8 +24,6 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
 };
 
-
-
 const registerUser = asyncHandler(async (req, res) => {
     const { fullName, email, password } = req.body;
     // console.log("Req from body:: ", req.body);
@@ -42,9 +41,7 @@ const registerUser = asyncHandler(async (req, res) => {
         }
     }
 
-    const existedUser = await User.findOne({
-        email
-    });
+    const existedUser = await User.findOne({ email });
 
     if (existedUser) {
         throw new ApiError(409, "User with this email already exists");
@@ -65,18 +62,9 @@ const registerUser = asyncHandler(async (req, res) => {
         }
     }
 
-    const avatarBuffer = req.file?.buffer;
-    let avatarUrl;
-    if (avatarBuffer) {
-        const avatar = await uploadOnCloudinary(avatarBuffer);
-        if (!avatar?.url) throw new ApiError(500, "Avatar upload failed");
-        avatarUrl = avatar.url;
-    }
-
     const user = await User.create(
         { 
             fullName, 
-            avatar: avatarUrl, 
             email, 
             password, 
             username
@@ -89,7 +77,6 @@ const registerUser = asyncHandler(async (req, res) => {
         new ApiResponse(201, createdUser, "User registered successfully")
     );
 });
-
 
 const logInUser = asyncHandler(async (req, res) => {
     const { email, username, password } = req.body;
@@ -149,7 +136,6 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     );
 });
 
-
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
     console.log("Incoming Refresh Token: ", incomingRefreshToken);
@@ -193,8 +179,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     });
 });
 
-
-
 const userProfile = asyncHandler(async(req,res) => {
     const { username } = req.params;
 
@@ -229,23 +213,44 @@ const updateUserProfile = asyncHandler(async(req,res) => {
     );
 });
 
-const updateUserAvatar = asyncHandler(async(req,res) => {
-    const avatarBuffer = req.file?.buffer;
-    if (!avatarBuffer) {
-        throw new ApiError(400, "Avatar file is required");
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    const avatarLocalPath = req.file?.path;
+
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "Avatar file is missing");
     }
 
-    const avatar = await uploadOnCloudinary(avatarBuffer);
-    if (!avatar?.url) throw new ApiError(500, "Avatar upload failed");
+    const user = await User.findById(req.user._id);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
 
-    const updatedUser = await User.findByIdAndUpdate(
-        req.user._id,
-        { $set: { avatar: avatar.url } },
-        { new: true, runValidators: true }
-    ).select("-password -refreshToken");
+    // upload new avatar
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+
+    if (!avatar?.url) {
+        throw new ApiError(500, "Error while uploading avatar");
+    }
+
+    // delete temp file
+    await fs.promises.unlink(avatarLocalPath);
+
+    // delete old avatar from cloudinary
+    if (user.avatar) {
+        const publicId = user.avatar
+            .split("/")
+            .pop()
+            .split(".")[0];
+
+        await deleteFromCloudinary(publicId);
+    }
+
+    // update user avatar
+    user.avatar = avatar.url;
+    await user.save({ validateBeforeSave: false });
 
     return res.status(200).json(
-        new ApiResponse(200, updatedUser, "User avatar updated successfully")
+        new ApiResponse(200, user, "Avatar updated successfully")
     );
 });
 
