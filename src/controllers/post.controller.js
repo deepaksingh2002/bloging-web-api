@@ -31,9 +31,9 @@ const createPost = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid category");
     }
 
-    const thumbnailLocalPath = req.file.path;
-    let thumbnailUpload;
+    const thumbnailLocalPath = req.file?.path;
 
+    let thumbnailUpload;
     try {
         thumbnailUpload = await uploadOnCloudinary(thumbnailLocalPath);
 
