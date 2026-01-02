@@ -4,7 +4,7 @@
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen)
 ![Node](https://img.shields.io/badge/Node-18%2B-brightgreen)
 
-A comprehensive, production-ready REST API for a college blogging platform built with **Node.js**, **Express.js**, and **MongoDB**. This API provides robust endpoints for managing posts, user authentication, interactions (likes), and channel subscriptions with enterprise-grade error handling and security features.
+A comprehensive, production-ready REST API for a blogging platform built with **Node.js**, **Express.js**, and **MongoDB**. This API provides robust endpoints for managing posts, user authentication, interactions (likes), and channel subscriptions with enterprise-grade error handling and security features.
 
 **Base URL:** `https://college-blog-qlqp.onrender.com/api/v1`
 
