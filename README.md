@@ -475,11 +475,9 @@ Handle user authentication, profile management, and account operations.
 
 ```json
 {
-  "username": "john_doe",
-  "email": "john@college.edu",
-  "password": "SecurePass123!@",
-  "fullName": "John Doe",
-  "avatar": "https://cloudinary.com/avatar.jpg"
+  "fullName": "testuser1",
+  "email": "testuser1@gmail.com",
+  "password": "**************",
 }
 ```
 
@@ -487,28 +485,27 @@ Handle user authentication, profile management, and account operations.
 
 | Field | Type | Validation |
 |-------|------|-----------|
-| `username` | string | 3-30 chars, alphanumeric + underscore, unique |
+| `fullName` | string | 2-100 characters |
 | `email` | string | Valid email format, unique |
 | `password` | string | Min 8 chars, must include: uppercase, lowercase, number, special char |
-| `fullName` | string | 2-100 characters |
-| `avatar` | string | Valid image URL (optional) |
+
 
 **Success Response (201):**
 
 ```json
 {
-  "success": true,
-  "message": "User registered successfully. Please verify your email.",
-  "data": {
-    "_id": "507f1f77bcf86cd799439012",
-    "username": "john_doe",
-    "email": "john@college.edu",
-    "fullName": "John Doe",
-    "avatar": "https://cloudinary.com/avatar.jpg",
-    "emailVerified": false,
-    "createdAt": "2025-01-03T12:00:00Z"
-  },
-  "timestamp": "2025-01-03T12:00:00Z"
+    "statusCode": 201,
+    "data": {
+        "_id": "695824a27ada76ca5e2eb0a8",
+        "username": "testuser1",
+        "email": "testuser1@gmail.com",
+        "fullName": "Test User1",
+        "createdAt": "2026-01-02T20:03:46.321Z",
+        "updatedAt": "2026-01-02T20:03:46.321Z",
+        "__v": 0
+    },
+    "message": "User registered successfully",
+    "success": true
 }
 ```
 
@@ -536,8 +533,8 @@ Handle user authentication, profile management, and account operations.
 
 ```json
 {
-  "email": "john@college.edu",
-  "password": "SecurePass123!@"
+  "email": "testuser1@gmail.com",
+  "password": "**************"
 }
 ```
 
@@ -545,21 +542,22 @@ Handle user authentication, profile management, and account operations.
 
 ```json
 {
-  "success": true,
-  "message": "Login successful",
-  "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-      "_id": "507f1f77bcf86cd799439012",
-      "username": "john_doe",
-      "email": "john@college.edu",
-      "fullName": "John Doe",
-      "avatar": "https://cloudinary.com/avatar.jpg"
-    }
-  },
-  "tokenExpiry": 3600,
-  "timestamp": "2025-01-03T12:00:00Z"
+    "statusCode": 200,
+    "data": {
+        "user": {
+            "_id": "695824a27ada76ca5e2eb0a8",
+            "username": "testuser1",
+            "email": "testuser1@gmail.com",
+            "fullName": "Test User1",
+            "createdAt": "2026-01-02T20:03:46.321Z",
+            "updatedAt": "2026-01-02T20:07:16.957Z",
+            "__v": 0
+        },
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..",
+        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.."
+    },
+    "message": "Logged in successfully",
+    "success": true
 }
 ```
 
@@ -597,22 +595,18 @@ Handle user authentication, profile management, and account operations.
 
 ```json
 {
-  "success": true,
-  "data": {
-    "_id": "507f1f77bcf86cd799439012",
-    "username": "john_doe",
-    "email": "john@college.edu",
-    "fullName": "John Doe",
-    "avatar": "https://cloudinary.com/avatar.jpg",
-    "bio": "Web developer and tech enthusiast",
-    "coverImage": "https://cloudinary.com/cover.jpg",
-    "postsCount": 12,
-    "followersCount": 45,
-    "followingCount": 30,
-    "emailVerified": true,
-    "createdAt": "2025-01-01T10:00:00Z"
-  },
-  "timestamp": "2025-01-03T12:00:00Z"
+    "statusCode": 200,
+    "data": {
+        "_id": "695824a27ada76ca5e2eb0a8",
+        "username": "testuser1",
+        "email": "testuser1@gmail.com",
+        "fullName": "Test User1",
+        "createdAt": "2026-01-02T20:03:46.321Z",
+        "updatedAt": "2026-01-02T20:07:16.957Z",
+        "__v": 0
+    },
+    "message": "Current user fetched successfully",
+    "success": true
 }
 ```
 
