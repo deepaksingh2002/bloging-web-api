@@ -8,55 +8,55 @@ import mongoose from "mongoose";
 
 
 const createPost = asyncHandler(async (req, res) => {
-    const { title, content, catagry } = req.body;
+  const { title, content, category } = req.body;
+  if (!req.user?._id) {
+    throw new ApiError(401, "Unauthorized");
+  }
+  if (!title || !content) {
+    throw new ApiError(400, "Title and content are required");
+  }
+  if (!req.file?.path) {
+    throw new ApiError(400, "Thumbnail is required");
+  }
+  const allowedCategories = [
+    "Tech",
+    "Technology",
+    "Health",
+    "Science",
+    "Sports",
+    "Entertainment",
+  ];
+  if (category && !allowedCategories.includes(category)) {
+    throw new ApiError(400, "Invalid category");
+  }
+  const thumbnailLocalPath = req.file.path;
 
-    if (!title || !content) {
-        throw new ApiError(400, "Title and content are required");
+  let thumbnailUpload;
+
+  try {
+    thumbnailUpload = await uploadOnCloudinary(thumbnailLocalPath);
+
+    if (!thumbnailUpload?.url) {
+      throw new ApiError(500, "Thumbnail upload failed");
     }
+    const post = await Post.create({
+      title,
+      content,
+      category,
+      thumbnail: thumbnailUpload.url,
+      owner: req.user._id,
+    });
 
-    if (!req.file?.path) {
-        throw new ApiError(400, "Thumbnail is required");
+    return res.status(201).json(
+      new ApiResponse(201, post, "Post created successfully")
+    );
+  } catch (error) {
+    throw error; 
+  } finally {
+    if (thumbnailLocalPath) {
+      await fs.promises.unlink(thumbnailLocalPath).catch(() => {});
     }
-
-    const allowedCategories = [
-        "Tech",
-        "Technology",
-        "Health",
-        "Science",
-        "Sports",
-        "Entertainment"
-    ];
-
-    if (catagry && !allowedCategories.includes(catagry)) {
-        throw new ApiError(400, "Invalid category");
-    }
-
-    const thumbnailLocalPath = req.file?.path;
-
-    let thumbnailUpload;
-    try {
-        thumbnailUpload = await uploadOnCloudinary(thumbnailLocalPath);
-
-        if (!thumbnailUpload?.url) {
-            throw new ApiError(500, "Thumbnail upload failed");
-        }
-
-        const post = await Post.create({
-            title,
-            content,
-            catagry,
-            thumbnail: thumbnailUpload.url,
-            owner: req.user._id
-        });
-
-        return res.status(201).json(
-            new ApiResponse(201, post, "Post created successfully")
-        );
-
-    } finally {
-        // remove temp file
-        await fs.promises.unlink(thumbnailLocalPath).catch(() => {});
-    }
+  }
 });
 
 const getPosts = asyncHandler(async (req, res) => {
