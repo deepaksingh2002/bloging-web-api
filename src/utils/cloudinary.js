@@ -6,10 +6,17 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-export const uploadOnCloudinary = async (buffer) => {
-    if (!buffer) return null;
+export const uploadOnCloudinary = async (fileOrBuffer) => {
+    if (!fileOrBuffer) return null;
 
     try {
+        // If a string path is provided, use the uploader.upload helper
+        if (typeof fileOrBuffer === "string") {
+            const result = await cloudinary.uploader.upload(fileOrBuffer, { resource_type: "auto" });
+            return result;
+        }
+
+        // Otherwise assume a buffer and upload via upload_stream
         const result = await new Promise((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
                 { resource_type: "auto" },
@@ -18,7 +25,7 @@ export const uploadOnCloudinary = async (buffer) => {
                     else resolve(response);
                 }
             );
-            uploadStream.end(buffer);
+            uploadStream.end(fileOrBuffer);
         });
 
         return result;
