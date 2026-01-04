@@ -8,7 +8,7 @@ import mongoose from "mongoose";
 
 
 const createPost = asyncHandler(async (req, res) => {
-  const { title, content, category } = req.body;
+  const { title, content, catagry } = req.body;
   if (!req.user?._id) {
     throw new ApiError(401, "Unauthorized");
   }
@@ -26,7 +26,7 @@ const createPost = asyncHandler(async (req, res) => {
     "Sports",
     "Entertainment",
   ];
-  if (category && !allowedCategories.includes(category)) {
+  if (catagry && !allowedCategories.includes(catagry)) {
     throw new ApiError(400, "Invalid category");
   }
   const thumbnailLocalPath = req.file.path;
@@ -42,7 +42,7 @@ const createPost = asyncHandler(async (req, res) => {
     const post = await Post.create({
       title,
       content,
-      category,
+      catagry,
       thumbnail: thumbnailUpload.url,
       owner: req.user._id,
     });
