@@ -51,7 +51,7 @@ const createPost = asyncHandler(async (req, res) => {
       new ApiResponse(201, post, "Post created successfully")
     );
   } catch (error) {
-    throw error; 
+    throw new ApiError(500, "post is not created."); 
   } finally {
     if (thumbnailLocalPath) {
       await fs.promises.unlink(thumbnailLocalPath).catch(() => {});
