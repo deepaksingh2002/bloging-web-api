@@ -1,0 +1,21 @@
+import { Router } from "express";
+import { upload } from "../middlewares/multer.middleware.js";
+import {
+  userProfile,
+  updateUserProfile,
+  changeUserPassword,
+  updateUserAvatar,
+} from "../controllers/profile.controller.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
+
+const router = Router();
+
+router.use(verifyJWT);
+
+router.route("/profile").get(userProfile);
+router.route("/update-profile").patch(updateUserProfile);
+router.route("/update-avatar").patch(upload.single("avatar"), updateUserAvatar);
+router.route("/change-password").patch(changeUserPassword);
+router.route("/forget-password").patch(changeUserPassword);
+
+export default router;
