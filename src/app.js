@@ -40,12 +40,14 @@ import profileRouter from "./routers/profile.router.js";
 import postRouter from "./routers/post.router.js";
 import likeRouter from "./routers/like.router.js";
 import subscriptionRouter from "./routers/subscription.router.js";
+import commentRouter from "./routers/comment.router.js";
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/users", profileRouter);
 app.use("/api/v1/post", postRouter);
 app.use("/api/v1/like", likeRouter);
 app.use("/api/v1/subscriptions", subscriptionRouter);
+app.use("/api/v1/comments", commentRouter);
 
 export { app };
 
