@@ -5,19 +5,33 @@
 
 import mongoose,{Schema} from "mongoose";
 
-const likeSchema = new Schema({
-    post: {
-        type: Schema.Types.ObjectId,
-        ref: "Post"
+const likeSchema = new Schema(
+    {
+        post: {
+            type: Schema.Types.ObjectId,
+            ref: "Post"
+        },
+        comment: {
+            type: Schema.Types.ObjectId,
+            ref: "Comment"
+        },
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true
+        }
     },
-    comment: {
-        type: Schema.Types.ObjectId,
-        ref: "Comment"
-    },
-    user: {
-        type: Schema.Types.ObjectId,
-        ref: "User"
-    }
-})
+    { timestamps: true }
+);
+
+likeSchema.index(
+    { post: 1, user: 1 },
+    { unique: true, partialFilterExpression: { post: { $type: "objectId" } } }
+);
+
+likeSchema.index(
+    { comment: 1, user: 1 },
+    { unique: true, partialFilterExpression: { comment: { $type: "objectId" } } }
+);
 
 export const Like = mongoose.model("Like", likeSchema);

@@ -9,6 +9,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Post } from "../models/post.model.js";
 import { Like } from "../models/likes.model.js";
 import { Comment } from "../models/comment.model.js";
+import mongoose from "mongoose";
 
 /**
  * Toggle like state for a post.
@@ -19,17 +20,24 @@ const togglePostLike = asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const userId = req.user._id;
 
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    throw new ApiError(400, "Invalid post id");
+  }
+
   const post = await Post.findById(postId);
   if (!post) {
     throw new ApiError(404, "Post not found");
   }
 
-  const existingLike = await Like.findOne({ post: postId, user: userId });
-
-  if (existingLike) {
-    await Like.findByIdAndDelete(existingLike._id);
+  const deletedLike = await Like.findOneAndDelete({ post: postId, user: userId });
+  if (deletedLike) {
+    const likesCount = await Like.countDocuments({ post: postId });
     return res.status(200).json(
-      new ApiResponse(200, null, "Post unliked successfully")
+      new ApiResponse(
+        200,
+        { liked: false, likesCount },
+        "Post unliked successfully"
+      )
     );
   }
 
@@ -38,9 +46,10 @@ const togglePostLike = asyncHandler(async (req, res) => {
     user: userId,
   });
   await newLike.save();
+  const likesCount = await Like.countDocuments({ post: postId });
 
   return res.status(200).json(
-    new ApiResponse(200, null, "Post liked successfully")
+    new ApiResponse(200, { liked: true, likesCount }, "Post liked successfully")
   );
 });
 
@@ -53,17 +62,27 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
   const userId = req.user._id;
 
+  if (!mongoose.Types.ObjectId.isValid(commentId)) {
+    throw new ApiError(400, "Invalid comment id");
+  }
+
   const comment = await Comment.findById(commentId);
   if (!comment) {
     throw new ApiError(404, "Comment not found");
   }
 
-  const existingLike = await Like.findOne({ comment: commentId, user: userId });
-
-  if (existingLike) {
-    await Like.findByIdAndDelete(existingLike._id);
+  const deletedLike = await Like.findOneAndDelete({
+    comment: commentId,
+    user: userId,
+  });
+  if (deletedLike) {
+    const likesCount = await Like.countDocuments({ comment: commentId });
     return res.status(200).json(
-      new ApiResponse(200, null, "Comment unliked successfully")
+      new ApiResponse(
+        200,
+        { liked: false, likesCount },
+        "Comment unliked successfully"
+      )
     );
   }
 
@@ -72,9 +91,14 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     user: userId,
   });
   await newLike.save();
+  const likesCount = await Like.countDocuments({ comment: commentId });
 
   return res.status(200).json(
-    new ApiResponse(200, null, "Comment liked successfully")
+    new ApiResponse(
+      200,
+      { liked: true, likesCount },
+      "Comment liked successfully"
+    )
   );
 });
 
@@ -86,12 +110,30 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
 const getLikedPosts = asyncHandler(async (req, res) => {
   const userId = req.user._id;
 
-  const likedPosts = await Like.find({ user: userId }).populate("post").lean();
+  const likedPosts = await Like.find({ user: userId, post: { $ne: null } })
+    .populate({
+      path: "post",
+      select: "title thumbnail catagry owner createdAt",
+      populate: {
+        path: "owner",
+        select: "username fullName",
+      },
+    })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const posts = likedPosts
+    .map((like) => like.post)
+    .filter(Boolean)
+    .filter(
+      (post, index, arr) =>
+        arr.findIndex((p) => String(p._id) === String(post._id)) === index
+    );
 
   return res.status(200).json(
     new ApiResponse(
       200,
-      likedPosts.map((like) => like.post),
+      posts,
       "Liked posts fetched successfully"
     )
   );
