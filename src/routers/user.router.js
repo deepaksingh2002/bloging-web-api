@@ -11,6 +11,7 @@ import {
   logOutUser,
   getCurrentUser,
   refreshAccessToken,
+  getSessionDebug,
 } from "../controllers/user.controllers.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -21,6 +22,7 @@ router.route("/login").post(logInUser);
 router.route("/logout").post(verifyJWT, logOutUser);
 router.route("/currentUser").get(verifyJWT, getCurrentUser);
 router.route("/refresh-token").post(refreshAccessToken);
+router.route("/session").get(getSessionDebug);
 
 export default router;
 

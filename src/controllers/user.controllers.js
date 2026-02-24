@@ -7,7 +7,28 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
+import { getCookieOptions } from "../utils/authCookies.js";
 import jwt from "jsonwebtoken";
+
+const getTokenStatus = (token, secret) => {
+  if (!token) return { present: false, status: "missing" };
+
+  try {
+    const decoded = jwt.verify(token, secret);
+    return {
+      present: true,
+      status: "valid",
+      userId: decoded?._id || null,
+      expiresAt: decoded?.exp ? new Date(decoded.exp * 1000).toISOString() : null,
+    };
+  } catch (error) {
+    return {
+      present: true,
+      status: error?.name === "TokenExpiredError" ? "expired" : "invalid",
+      error: error?.message || "Token verification failed",
+    };
+  }
+};
 
 /**
  * Generate and persist access/refresh tokens for a user.
@@ -109,11 +130,7 @@ const logInUser = asyncHandler(async (req, res) => {
 
   const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-  };
+  const options = getCookieOptions(req);
 
   return res
     .status(200)
@@ -138,10 +155,7 @@ const logOutUser = asyncHandler(async (req, res) => {
     { new: true }
   );
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
+  const options = getCookieOptions(req);
 
   return res
     .status(200)
@@ -188,11 +202,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-  };
+  const options = getCookieOptions(req);
 
   return res
     .status(200)
@@ -201,10 +211,68 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     .json({ success: true });
 });
 
+/**
+ * Debug endpoint to inspect current auth/session token state.
+ * Disabled in production for safety.
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
+const getSessionDebug = asyncHandler(async (req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    throw new ApiError(403, "Session debug endpoint is disabled in production");
+  }
+
+  const headerToken = req
+    .header("Authorization")
+    ?.replace(/^Bearer\s+/i, "")
+    ?.trim();
+  const accessToken = req.cookies?.accessToken || headerToken;
+  const refreshToken = req.cookies?.refreshToken;
+
+  const access = getTokenStatus(accessToken, process.env.ACCESS_TOKEN_SECRET);
+  const refresh = getTokenStatus(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+  let refreshMatchesDatabase = false;
+  let refreshUser = null;
+
+  if (refresh.status === "valid" && refresh.userId) {
+    const user = await User.findById(refresh.userId).select("_id email username refreshToken");
+    refreshMatchesDatabase = Boolean(user && user.refreshToken === refreshToken);
+    if (user) {
+      refreshUser = {
+        _id: user._id,
+        email: user.email,
+        username: user.username,
+      };
+    }
+  }
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        checkedAt: new Date().toISOString(),
+        cookies: {
+          hasAccessTokenCookie: Boolean(req.cookies?.accessToken),
+          hasRefreshTokenCookie: Boolean(req.cookies?.refreshToken),
+        },
+        accessToken: access,
+        refreshToken: {
+          ...refresh,
+          matchesDatabase: refreshMatchesDatabase,
+          user: refreshUser,
+        },
+      },
+      "Session debug details fetched successfully"
+    )
+  );
+});
+
 export {
   registerUser,
   logInUser,
   logOutUser,
   getCurrentUser,
   refreshAccessToken,
+  getSessionDebug,
 };
