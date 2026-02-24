@@ -1,3 +1,8 @@
+/**
+ * File: D:\Fs\Blog\backend\src\routers\profile.router.js
+ * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
+ */
+
 import { Router } from "express";
 import { upload } from "../middlewares/multer.middleware.js";
 import {
@@ -19,3 +24,4 @@ router.route("/change-password").patch(changeUserPassword);
 router.route("/forget-password").patch(changeUserPassword);
 
 export default router;
+

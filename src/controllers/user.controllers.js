@@ -1,9 +1,19 @@
+/**
+ * File: D:/Fs/Blog/backend/src/controllers/user.controllers.js
+ * Purpose: Authentication and session handlers for user accounts.
+ */
+
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 
+/**
+ * Generate and persist access/refresh tokens for a user.
+ * @param {string} userId
+ * @returns {Promise<{accessToken: string, refreshToken: string}>}
+ */
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -21,6 +31,11 @@ const generateAccessAndRefreshToken = async (userId) => {
   }
 };
 
+/**
+ * Register a new user and auto-generate a unique username from email.
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 const registerUser = asyncHandler(async (req, res) => {
   const { fullName, email, password } = req.body;
 
@@ -72,6 +87,11 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, createdUser, "User registered successfully"));
 });
 
+/**
+ * Authenticate user credentials and set token cookies.
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 const logInUser = asyncHandler(async (req, res) => {
   const { email, username, password } = req.body;
 
@@ -102,6 +122,11 @@ const logInUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, { user: loggedInUser }, "Logged in successfully"));
 });
 
+/**
+ * Clear user refresh token and remove auth cookies.
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 const logOutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
@@ -125,12 +150,22 @@ const logOutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Logged out successfully"));
 });
 
+/**
+ * Return the currently authenticated user payload.
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, req.user, "Current user fetched successfully"));
 });
 
+/**
+ * Validate refresh token and rotate access/refresh tokens.
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 

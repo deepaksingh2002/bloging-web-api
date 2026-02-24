@@ -1,3 +1,8 @@
+/**
+ * File: D:\Fs\Blog\backend\src\app.js
+ * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
+ */
+
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -43,3 +48,4 @@ app.use("/api/v1/like", likeRouter);
 app.use("/api/v1/subscriptions", subscriptionRouter);
 
 export { app };
+

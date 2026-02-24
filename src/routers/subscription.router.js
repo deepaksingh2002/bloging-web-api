@@ -1,3 +1,8 @@
+/**
+ * File: D:\Fs\Blog\backend\src\routers\subscription.router.js
+ * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
+ */
+
 import { Router } from "express";
 import { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels } from "../controllers/subscription.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";

@@ -1,3 +1,8 @@
+/**
+ * File: D:\Fs\Blog\backend\src\routers\user.router.js
+ * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
+ */
+
 import { Router } from "express";
 import { upload } from "../middlewares/multer.middleware.js";
 import {
@@ -18,3 +23,4 @@ router.route("/currentUser").get(verifyJWT, getCurrentUser);
 router.route("/refresh-token").post(refreshAccessToken);
 
 export default router;
+

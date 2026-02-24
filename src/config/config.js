@@ -1,3 +1,8 @@
+/**
+ * File: D:\Fs\Blog\backend\src\config\config.js
+ * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
+ */
+
 // import { configDotenv } from "dotenv";
 
 // configDotenv({
@@ -18,4 +23,5 @@
 //     cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
 //     frontendDomain: process.env.FRONTEND_DOMAIN,
 // }
+
 
