@@ -26,11 +26,13 @@ const likeSchema = new Schema(
 
 likeSchema.index(
     { post: 1, user: 1 },
+    // Enforces one like per user per post.
     { unique: true, partialFilterExpression: { post: { $type: "objectId" } } }
 );
 
 likeSchema.index(
     { comment: 1, user: 1 },
+    // Enforces one like per user per comment.
     { unique: true, partialFilterExpression: { comment: { $type: "objectId" } } }
 );
 

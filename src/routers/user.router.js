@@ -17,11 +17,14 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
+// Authentication lifecycle routes.
 router.post("/register", upload.single("avatar"), registerUser);
 router.route("/login").post(logInUser);
 router.route("/logout").post(logOutUser);
 router.route("/currentUser").get(verifyJWT, getCurrentUser);
 router.route("/refresh-token").post(refreshAccessToken);
+
+// Non-production auth diagnostics.
 router.route("/session").get(getSessionDebug);
 
 export default router;

@@ -13,8 +13,6 @@ import fs from "fs";
 
 /**
  * Return current user's profile and authored posts.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const userProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).select("-password -refreshToken");
@@ -34,8 +32,6 @@ const userProfile = asyncHandler(async (req, res) => {
 
 /**
  * Update editable profile fields (fullName, bio).
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const updateUserProfile = asyncHandler(async (req, res) => {
   const { fullName, bio } = req.body;
@@ -61,8 +57,6 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
 /**
  * Upload and replace user's avatar image.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const updateUserAvatar = asyncHandler(async (req, res) => {
   const avatarLocalPath = req.file?.path;
@@ -99,8 +93,6 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
 /**
  * Change password after validating current password.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const changeUserPassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;

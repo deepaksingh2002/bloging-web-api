@@ -44,16 +44,19 @@ const userSchema = new Schema({
     }
 }, { timestamps: true });
 
+// Hashes password only when it is created or modified.
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);
     next();
 });
 
+// Compares a plain-text password with the stored hash.
 userSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password);
 };
 
+// Issues short-lived JWT used for authenticated API access.
 userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
@@ -69,6 +72,7 @@ userSchema.methods.generateAccessToken = function () {
     );
 };
 
+// Issues long-lived JWT used to renew access sessions.
 userSchema.methods.generateRefreshToken = function () {
     return jwt.sign(
         {

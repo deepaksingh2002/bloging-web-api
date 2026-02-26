@@ -17,8 +17,6 @@ import mongoose from "mongoose";
 
 /**
  * Create a new post with thumbnail upload.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const createPost = asyncHandler(async (req, res) => {
   const { title, content, catagry } = req.body;
@@ -74,8 +72,6 @@ const createPost = asyncHandler(async (req, res) => {
 
 /**
  * Fetch all posts for feed/list screens.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const getPosts = asyncHandler(async (req, res) => {
   const posts = await Post.find()
@@ -95,8 +91,6 @@ const getPosts = asyncHandler(async (req, res) => {
 /**
  * Search posts by title/content and optional category filter.
  * Query params: q (required), catagry (optional).
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const searchPosts = asyncHandler(async (req, res) => {
   const { q, catagry } = req.query;
@@ -129,8 +123,6 @@ const searchPosts = asyncHandler(async (req, res) => {
 
 /**
  * Fetch a single post by id.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const getPostById = asyncHandler(async (req, res) => {
   const { postId } = req.params;
@@ -157,8 +149,6 @@ const getPostById = asyncHandler(async (req, res) => {
 
 /**
  * Delete a post by id.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const deletePost = asyncHandler(async (req, res) => {
   const { postId } = req.params;
@@ -175,8 +165,6 @@ const deletePost = asyncHandler(async (req, res) => {
 
 /**
  * Update post content and optionally replace thumbnail.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const updatePost = asyncHandler(async (req, res) => {
   const { title, content, catagry } = req.body;

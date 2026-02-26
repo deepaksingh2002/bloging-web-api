@@ -64,6 +64,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
     throw new ApiError(401, "Invalid refresh token");
   }
 
+  // Auto-heal expired access tokens for authenticated sessions using a valid refresh cookie.
   const newAccessToken = user.generateAccessToken();
   res.cookie("accessToken", newAccessToken, getAccessTokenCookieOptions(req));
 

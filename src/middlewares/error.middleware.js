@@ -1,10 +1,12 @@
 import { ApiError } from "../utils/ApiError.js";
 
 const notFoundHandler = (req, _res, next) => {
+  // Converts unknown routes into a consistent API 404 error.
   next(new ApiError(404, `Route not found: ${req.method} ${req.originalUrl}`));
 };
 
 const errorHandler = (err, _req, res, _next) => {
+  // Final error middleware that normalizes all errors into JSON payloads.
   const statusCode = err?.statusCode && Number(err.statusCode) >= 400
     ? Number(err.statusCode)
     : 500;

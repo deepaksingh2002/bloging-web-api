@@ -13,18 +13,16 @@ import { Like } from "../models/likes.model.js";
 
 /**
  * Create a comment for a post.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const createComment = asyncHandler(async (req, res) => {
   const { postId } = req.params;
-  const content = req.body?.content ?? req.body?.comment ?? req.body?.text;
+  const { content } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(postId)) {
     throw new ApiError(400, "Invalid post id");
   }
 
-  if (!content || !String(content).trim()) {
+  if (!content || !content.trim()) {
     throw new ApiError(400, "Comment content is required");
   }
 
@@ -34,7 +32,7 @@ const createComment = asyncHandler(async (req, res) => {
   }
 
   const comment = await Comment.create({
-    content: String(content).trim(),
+    content: content.trim(),
     post: postId,
     owner: req.user._id,
   });
@@ -50,8 +48,6 @@ const createComment = asyncHandler(async (req, res) => {
 
 /**
  * Get all comments for a post.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const getPostComments = asyncHandler(async (req, res) => {
   const { postId } = req.params;
@@ -84,8 +80,6 @@ const getPostComments = asyncHandler(async (req, res) => {
 
 /**
  * Update comment content by owner.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const updateComment = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
@@ -122,8 +116,6 @@ const updateComment = asyncHandler(async (req, res) => {
 
 /**
  * Delete a comment by owner and remove related likes.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const deleteComment = asyncHandler(async (req, res) => {
   const { commentId } = req.params;

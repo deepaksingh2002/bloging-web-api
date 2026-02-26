@@ -4,6 +4,7 @@
  */
 
 class ApiError extends Error {
+    // Standard error shape used by controllers and middleware.
     constructor(
         statusCode,
         message= "Somthing went wrong",

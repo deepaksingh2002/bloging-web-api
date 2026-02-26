@@ -13,16 +13,9 @@ import mongoose from "mongoose";
 
 /**
  * Toggle like state for a post.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const togglePostLike = asyncHandler(async (req, res) => {
-  const postId =
-    req.params?.postId ||
-    req.body?.postId ||
-    req.body?.post ||
-    req.query?.postId ||
-    req.query?.post;
+  const { postId } = req.params;
   const userId = req.user._id;
 
   if (!mongoose.Types.ObjectId.isValid(postId)) {
@@ -53,6 +46,7 @@ const togglePostLike = asyncHandler(async (req, res) => {
     });
     await newLike.save();
   } catch (error) {
+    // Concurrent requests can race into duplicate-key errors; treat as idempotent like.
     if (error?.code !== 11000) {
       throw error;
     }
@@ -66,16 +60,9 @@ const togglePostLike = asyncHandler(async (req, res) => {
 
 /**
  * Toggle like state for a comment.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const toggleCommentLike = asyncHandler(async (req, res) => {
-  const commentId =
-    req.params?.commentId ||
-    req.body?.commentId ||
-    req.body?.comment ||
-    req.query?.commentId ||
-    req.query?.comment;
+  const { commentId } = req.params;
   const userId = req.user._id;
 
   if (!mongoose.Types.ObjectId.isValid(commentId)) {
@@ -109,6 +96,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     });
     await newLike.save();
   } catch (error) {
+    // Concurrent requests can race into duplicate-key errors; treat as idempotent like.
     if (error?.code !== 11000) {
       throw error;
     }
@@ -126,8 +114,6 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
 
 /**
  * Return posts liked by the current user.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const getLikedPosts = asyncHandler(async (req, res) => {
   const userId = req.user._id;

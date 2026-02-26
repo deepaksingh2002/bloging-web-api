@@ -14,9 +14,9 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.route("/post/:postId").get(getPostComments).post(verifyJWT, createComment);
-router.route("/create/:postId").post(verifyJWT, createComment);
+// Comment list/create for a post.
 router.route("/posts/:postId/comments").get(getPostComments).post(verifyJWT, createComment);
+// Comment mutation by comment id.
 router.route("/:commentId").patch(verifyJWT, updateComment).delete(verifyJWT, deleteComment);
 
 export default router;

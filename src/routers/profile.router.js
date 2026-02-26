@@ -21,7 +21,6 @@ router.route("/profile").get(userProfile);
 router.route("/update-profile").patch(updateUserProfile);
 router.route("/update-avatar").patch(upload.single("avatar"), updateUserAvatar);
 router.route("/change-password").patch(changeUserPassword);
-router.route("/forget-password").patch(changeUserPassword);
 
 export default router;
 

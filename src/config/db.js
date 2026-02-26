@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 // import {config} from "../config/config.js";
 import { DB_NAME } from "../../constants.js";
 
+// Establishes a single MongoDB connection before the HTTP server starts.
 const connectDB = async () => {
     try {
         const connectInstance = await mongoose.connect(`${process.env.MONGO_CONNECTION_STRING}/${DB_NAME}`)

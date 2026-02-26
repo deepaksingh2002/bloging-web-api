@@ -12,6 +12,7 @@ cloudinary.config({
 });
 
 export const uploadOnCloudinary = async (fileOrBuffer) => {
+    // Supports both local temp file path and in-memory buffer uploads.
     if (!fileOrBuffer) return null;
 
     try {
@@ -42,6 +43,7 @@ export const uploadOnCloudinary = async (fileOrBuffer) => {
 };
 
 export const deleteFromCloudinary = async (publicId) => {
+    // Removes previously uploaded assets using Cloudinary public_id.
     try {
         await cloudinary.uploader.destroy(publicId);
     } catch (error) {
@@ -50,6 +52,7 @@ export const deleteFromCloudinary = async (publicId) => {
 };
 
 export const extractPublicId = (url) => {
+    // Derives public_id from a full Cloudinary URL.
     if (!url) return null;
 
     const withoutQuery = url.split("?")[0];

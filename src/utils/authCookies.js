@@ -3,6 +3,7 @@
  * Purpose: Centralized auth cookie configuration for login/refresh/logout flows.
  */
 
+// Converts duration strings like "15m", "1h", "7d" into milliseconds.
 const parseDurationToMs = (duration) => {
   if (!duration || typeof duration !== "string") return null;
 
@@ -21,6 +22,7 @@ const parseDurationToMs = (duration) => {
   return Number.isFinite(value) ? value * unitMs[unit] : null;
 };
 
+// Builds shared cookie options and adapts SameSite/Secure for local vs deployed requests.
 const getBaseCookieOptions = (req) => {
   const origin = req.get("origin") || "";
   const isLocalOrigin = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
@@ -42,6 +44,7 @@ const getBaseCookieOptions = (req) => {
   };
 };
 
+// Cookie options for access token lifetime.
 const getAccessTokenCookieOptions = (req) => {
   const maxAge = parseDurationToMs(process.env.ACCESS_TOKEN_EXPIRY);
   return maxAge
@@ -49,6 +52,7 @@ const getAccessTokenCookieOptions = (req) => {
     : getBaseCookieOptions(req);
 };
 
+// Cookie options for refresh token lifetime.
 const getRefreshTokenCookieOptions = (req) => {
   const maxAge = parseDurationToMs(process.env.REFRESH_TOKEN_EXPIRY);
   return maxAge

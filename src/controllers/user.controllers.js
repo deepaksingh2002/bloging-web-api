@@ -36,8 +36,6 @@ const getTokenStatus = (token, secret) => {
 
 /**
  * Generate and persist access/refresh tokens for a user.
- * @param {string} userId
- * @returns {Promise<{accessToken: string, refreshToken: string}>}
  */
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -58,8 +56,6 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 /**
  * Register a new user and auto-generate a unique username from email.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const registerUser = asyncHandler(async (req, res) => {
   const { fullName, email, password } = req.body;
@@ -114,8 +110,6 @@ const registerUser = asyncHandler(async (req, res) => {
 
 /**
  * Authenticate user credentials and set token cookies.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const logInUser = asyncHandler(async (req, res) => {
   const { email, username, password } = req.body;
@@ -146,8 +140,6 @@ const logInUser = asyncHandler(async (req, res) => {
 
 /**
  * Clear user refresh token and remove auth cookies.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const logOutUser = asyncHandler(async (req, res) => {
   const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
@@ -194,8 +186,6 @@ const logOutUser = asyncHandler(async (req, res) => {
 
 /**
  * Return the currently authenticated user payload.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
@@ -205,8 +195,6 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
 /**
  * Validate refresh token and rotate access/refresh tokens.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
@@ -228,7 +216,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid refresh token");
   }
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+  // Keep refresh token stable for the session and rotate only access token here.
+  // This avoids refresh-token races when multiple client requests refresh together.
+  const accessToken = user.generateAccessToken();
+  const refreshToken = user.refreshToken;
 
   const accessCookieOptions = getAccessTokenCookieOptions(req);
   const refreshCookieOptions = getRefreshTokenCookieOptions(req);
@@ -252,8 +243,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 /**
  * Debug endpoint to inspect current auth/session token state.
  * Disabled in production for safety.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const getSessionDebug = asyncHandler(async (req, res) => {
   if (process.env.NODE_ENV === "production") {

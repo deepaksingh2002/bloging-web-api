@@ -21,6 +21,7 @@ const commentSchema = new Schema({
     
 },{timestamps: true})
 
+// Optimizes post comment feed queries and owner-specific lookups.
 commentSchema.index({ post: 1, createdAt: -1 });
 commentSchema.index({ owner: 1, createdAt: -1 });
 

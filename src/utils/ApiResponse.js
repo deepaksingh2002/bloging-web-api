@@ -4,6 +4,7 @@
  */
 
 class ApiResponse {
+    // Standard success response shape used across the API.
     constructor(
         statusCode,
         data, 

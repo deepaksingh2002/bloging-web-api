@@ -11,8 +11,6 @@ import { Subscription } from "../models/subscription.model.js";
 
 /**
  * Toggle subscription for current user against a channel user.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const toggleSubscription = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
@@ -50,8 +48,6 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 
 /**
  * Fetch all subscribers for a channel.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
@@ -72,8 +68,6 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 
 /**
  * Fetch all channels subscribed by a user.
- * @param {import("express").Request} req
- * @param {import("express").Response} res
  */
 const getSubscribedChannels = asyncHandler(async (req, res) => {
   const { subscriberId } = req.params;
