@@ -25,7 +25,7 @@ const parseDurationToMs = (duration) => {
 // Builds shared cookie options and adapts SameSite/Secure for local vs deployed requests.
 const getBaseCookieOptions = (req) => {
   const origin = req.get("origin") || "";
-  const isLocalOrigin = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+  const requestHost = req.get("host") || "";
   const forwardedProtoHeader = req.headers["x-forwarded-proto"];
   const forwardedProto = Array.isArray(forwardedProtoHeader)
     ? forwardedProtoHeader[0]
@@ -34,7 +34,17 @@ const getBaseCookieOptions = (req) => {
         .trim()
         .toLowerCase();
   const isHttps = req.secure || forwardedProto === "https";
-  const secure = isHttps && !isLocalOrigin;
+  let originHost = "";
+
+  try {
+    originHost = origin ? new URL(origin).host : "";
+  } catch {
+    originHost = "";
+  }
+
+  const isCrossSite = Boolean(originHost && requestHost && originHost !== requestHost);
+  const forceCrossSiteCookies = process.env.NODE_ENV === "production" || isCrossSite;
+  const secure = forceCrossSiteCookies ? isHttps : false;
 
   return {
     httpOnly: true,
