@@ -47,6 +47,7 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/users", profileRouter);
 app.use("/api/v1/post", postRouter);
 app.use("/api/v1/like", likeRouter);
+app.use("/api/v1/likes", likeRouter);
 app.use("/api/v1/subscriptions", subscriptionRouter);
 app.use("/api/v1/comments", commentRouter);
 
