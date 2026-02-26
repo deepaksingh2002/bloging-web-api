@@ -17,7 +17,12 @@ import mongoose from "mongoose";
  * @param {import("express").Response} res
  */
 const togglePostLike = asyncHandler(async (req, res) => {
-  const { postId } = req.params;
+  const postId =
+    req.params?.postId ||
+    req.body?.postId ||
+    req.body?.post ||
+    req.query?.postId ||
+    req.query?.post;
   const userId = req.user._id;
 
   if (!mongoose.Types.ObjectId.isValid(postId)) {
@@ -65,7 +70,12 @@ const togglePostLike = asyncHandler(async (req, res) => {
  * @param {import("express").Response} res
  */
 const toggleCommentLike = asyncHandler(async (req, res) => {
-  const { commentId } = req.params;
+  const commentId =
+    req.params?.commentId ||
+    req.body?.commentId ||
+    req.body?.comment ||
+    req.query?.commentId ||
+    req.query?.comment;
   const userId = req.user._id;
 
   if (!mongoose.Types.ObjectId.isValid(commentId)) {

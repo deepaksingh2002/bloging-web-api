@@ -28,6 +28,8 @@ router.route("/liked-posts").get(getLikedPosts);
 // Backward-compatible routes
 router.route("/toggle/post/:postId").post(togglePostLike).patch(togglePostLike);
 router.route("/toggle/comment/:commentId").post(toggleCommentLike).patch(toggleCommentLike);
+router.route("/toggle/post").post(togglePostLike).patch(togglePostLike);
+router.route("/toggle/comment").post(toggleCommentLike).patch(toggleCommentLike);
 router.route("/liked/posts").get(getLikedPosts);
 
 export default router;
