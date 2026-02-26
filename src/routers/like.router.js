@@ -15,9 +15,19 @@ const router = Router();
 
 router.use(verifyJWT);
 
-// Preferred routes
-router.patch("/posts/:postId/like", togglePostLike);
-router.patch("/comments/:commentId/like", toggleCommentLike);
+// Canonical routes
+router.route("/posts/:postId/like").patch(togglePostLike).post(togglePostLike);
+router.route("/comments/:commentId/like").patch(toggleCommentLike).post(toggleCommentLike);
 router.get("/liked-posts", getLikedPosts);
+
+// Backward-compatible routes used by older frontend builds.
+router.route("/posts/:postId/toggle").patch(togglePostLike).post(togglePostLike);
+router.route("/comments/:commentId/toggle").patch(toggleCommentLike).post(toggleCommentLike);
+router.route("/toggle/post/:postId").patch(togglePostLike).post(togglePostLike);
+router.route("/toggle/comment/:commentId").patch(toggleCommentLike).post(toggleCommentLike);
+router.route("/toggle/post").patch(togglePostLike).post(togglePostLike);
+router.route("/toggle/comment").patch(toggleCommentLike).post(toggleCommentLike);
+router.get("/posts", getLikedPosts);
+router.get("/liked/posts", getLikedPosts);
 
 export default router;
