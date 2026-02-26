@@ -76,7 +76,7 @@ const createPost = asyncHandler(async (req, res) => {
 const getPosts = asyncHandler(async (req, res) => {
   const posts = await Post.find()
     .select("title thumbnail owner createdAt views")
-    .populate("owner", "username")
+    .populate("owner", "username", "avatar")
     .sort({ createdAt: -1 })
     .lean();
   if (!posts.length) {
