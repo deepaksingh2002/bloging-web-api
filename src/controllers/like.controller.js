@@ -41,11 +41,17 @@ const togglePostLike = asyncHandler(async (req, res) => {
     );
   }
 
-  const newLike = new Like({
-    post: postId,
-    user: userId,
-  });
-  await newLike.save();
+  try {
+    const newLike = new Like({
+      post: postId,
+      user: userId,
+    });
+    await newLike.save();
+  } catch (error) {
+    if (error?.code !== 11000) {
+      throw error;
+    }
+  }
   const likesCount = await Like.countDocuments({ post: postId });
 
   return res.status(200).json(
@@ -86,11 +92,17 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     );
   }
 
-  const newLike = new Like({
-    comment: commentId,
-    user: userId,
-  });
-  await newLike.save();
+  try {
+    const newLike = new Like({
+      comment: commentId,
+      user: userId,
+    });
+    await newLike.save();
+  } catch (error) {
+    if (error?.code !== 11000) {
+      throw error;
+    }
+  }
   const likesCount = await Like.countDocuments({ comment: commentId });
 
   return res.status(200).json(

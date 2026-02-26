@@ -18,13 +18,13 @@ import { Like } from "../models/likes.model.js";
  */
 const createComment = asyncHandler(async (req, res) => {
   const { postId } = req.params;
-  const { content } = req.body;
+  const content = req.body?.content ?? req.body?.comment ?? req.body?.text;
 
   if (!mongoose.Types.ObjectId.isValid(postId)) {
     throw new ApiError(400, "Invalid post id");
   }
 
-  if (!content || !content.trim()) {
+  if (!content || !String(content).trim()) {
     throw new ApiError(400, "Comment content is required");
   }
 
@@ -34,7 +34,7 @@ const createComment = asyncHandler(async (req, res) => {
   }
 
   const comment = await Comment.create({
-    content: content.trim(),
+    content: String(content).trim(),
     post: postId,
     owner: req.user._id,
   });
@@ -55,17 +55,29 @@ const createComment = asyncHandler(async (req, res) => {
  */
 const getPostComments = asyncHandler(async (req, res) => {
   const { postId } = req.params;
+  const page = Math.max(Number(req.query?.page) || 1, 1);
+  const limit = Math.min(Math.max(Number(req.query?.limit) || 20, 1), 100);
+  const skip = (page - 1) * limit;
 
   if (!mongoose.Types.ObjectId.isValid(postId)) {
     throw new ApiError(400, "Invalid post id");
   }
 
-  const comments = await Comment.find({ post: postId })
-    .populate("owner", "username fullName")
-    .sort({ createdAt: -1 })
-    .lean();
+  const [comments, total] = await Promise.all([
+    Comment.find({ post: postId })
+      .populate("owner", "username fullName")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Comment.countDocuments({ post: postId }),
+  ]);
 
   return res
+    .set("X-Page", String(page))
+    .set("X-Limit", String(limit))
+    .set("X-Total-Count", String(total))
+    .set("X-Total-Pages", String(Math.ceil(total / limit) || 1))
     .status(200)
     .json(new ApiResponse(200, comments, "Comments fetched successfully"));
 });

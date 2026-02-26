@@ -6,13 +6,14 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { notFoundHandler, errorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
 
 app.set("trust proxy", 1);
 
 const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(",")
+  ? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim()).filter(Boolean)
   : ["http://localhost:5173"];
 
 app.use(
@@ -46,8 +47,13 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/users", profileRouter);
 app.use("/api/v1/post", postRouter);
 app.use("/api/v1/like", likeRouter);
+app.use("/api/v1/likes", likeRouter);
 app.use("/api/v1/subscriptions", subscriptionRouter);
 app.use("/api/v1/comments", commentRouter);
+app.use("/api/v1/comment", commentRouter);
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export { app };
 
