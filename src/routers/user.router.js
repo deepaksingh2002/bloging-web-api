@@ -19,7 +19,7 @@ const router = Router();
 
 router.post("/register", upload.single("avatar"), registerUser);
 router.route("/login").post(logInUser);
-router.route("/logout").post(verifyJWT, logOutUser);
+router.route("/logout").post(logOutUser);
 router.route("/currentUser").get(verifyJWT, getCurrentUser);
 router.route("/refresh-token").post(refreshAccessToken);
 router.route("/session").get(getSessionDebug);

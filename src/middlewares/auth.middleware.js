@@ -7,7 +7,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
-import { getCookieOptions } from "../utils/authCookies.js";
+import { getAccessTokenCookieOptions } from "../utils/authCookies.js";
 
 const logAuthFailure = (req, stage, error) => {
   console.warn(`[AUTH] ${stage} failed`, {
@@ -65,7 +65,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
   }
 
   const newAccessToken = user.generateAccessToken();
-  res.cookie("accessToken", newAccessToken, getCookieOptions(req));
+  res.cookie("accessToken", newAccessToken, getAccessTokenCookieOptions(req));
 
   req.user = await User.findById(user._id).select("-password -refreshToken");
   return next();

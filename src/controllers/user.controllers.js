@@ -7,7 +7,11 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
-import { getCookieOptions } from "../utils/authCookies.js";
+import {
+  getAccessTokenCookieOptions,
+  getBaseCookieOptions,
+  getRefreshTokenCookieOptions,
+} from "../utils/authCookies.js";
 import jwt from "jsonwebtoken";
 
 const getTokenStatus = (token, secret) => {
@@ -130,12 +134,13 @@ const logInUser = asyncHandler(async (req, res) => {
 
   const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
 
-  const options = getCookieOptions(req);
+  const accessCookieOptions = getAccessTokenCookieOptions(req);
+  const refreshCookieOptions = getRefreshTokenCookieOptions(req);
 
   return res
     .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
+    .cookie("accessToken", accessToken, accessCookieOptions)
+    .cookie("refreshToken", refreshToken, refreshCookieOptions)
     .json(new ApiResponse(200, { user: loggedInUser }, "Logged in successfully"));
 });
 
@@ -145,17 +150,40 @@ const logInUser = asyncHandler(async (req, res) => {
  * @param {import("express").Response} res
  */
 const logOutUser = asyncHandler(async (req, res) => {
-  await User.findByIdAndUpdate(
-    req.user._id,
-    {
-      $unset: {
-        refreshToken: 1,
-      },
-    },
-    { new: true }
-  );
+  const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
-  const options = getCookieOptions(req);
+  if (req.user?._id) {
+    await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $unset: {
+          refreshToken: 1,
+        },
+      },
+      { new: true }
+    );
+  } else if (incomingRefreshToken) {
+    try {
+      const decoded = jwt.verify(
+        incomingRefreshToken,
+        process.env.REFRESH_TOKEN_SECRET
+      );
+
+      await User.findByIdAndUpdate(
+        decoded?._id,
+        {
+          $unset: {
+            refreshToken: 1,
+          },
+        },
+        { new: true }
+      );
+    } catch {
+      // Best-effort logout: always clear cookies even if refresh token is invalid.
+    }
+  }
+
+  const options = getBaseCookieOptions(req);
 
   return res
     .status(200)
@@ -202,13 +230,23 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
 
-  const options = getCookieOptions(req);
+  const accessCookieOptions = getAccessTokenCookieOptions(req);
+  const refreshCookieOptions = getRefreshTokenCookieOptions(req);
 
   return res
     .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json({ success: true });
+    .cookie("accessToken", accessToken, accessCookieOptions)
+    .cookie("refreshToken", refreshToken, refreshCookieOptions)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          accessToken,
+          refreshToken,
+        },
+        "Access token refreshed successfully"
+      )
+    );
 });
 
 /**
