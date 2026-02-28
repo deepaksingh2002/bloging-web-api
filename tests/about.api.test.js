@@ -112,9 +112,8 @@ test("public preview and download work after owner upload", async () => {
     });
 
   const previewResponse = await request(app).get("/api/v1/about/aboutMe/resume/preview");
-  assert.equal(previewResponse.status, 200);
-  assert.equal(previewResponse.body.success, true);
-  assert.equal(previewResponse.body.data.url, "https://cdn.example.com/resume.pdf");
+  assert.equal(previewResponse.status, 302);
+  assert.equal(previewResponse.headers.location, "https://cdn.example.com/resume.pdf");
 
   const downloadResponse = await request(app).get("/api/v1/about/aboutMe/resume/download");
   assert.equal(downloadResponse.status, 302);

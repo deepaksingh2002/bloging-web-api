@@ -108,15 +108,6 @@ const deleteResume = async (updatedBy) => {
   return updated;
 };
 
-const getResumePreview = async () => {
-  const about = await getAboutWithResumeOrThrow(true);
-
-  return {
-    url: about.resumeUrl,
-    file: about.resumeFile || null,
-  };
-};
-
 const getResumeDownloadUrl = async () => {
   const about = await getAboutWithResumeOrThrow(true);
   return about.resumeUrl;
@@ -129,7 +120,6 @@ const setResumeUploaderForTests = (uploader) => {
 export {
   updateResume,
   deleteResume,
-  getResumePreview,
   getResumeDownloadUrl,
   setResumeUploaderForTests,
 };

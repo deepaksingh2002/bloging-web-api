@@ -3,7 +3,6 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import {
   updateResume,
   deleteResume,
-  getResumePreview,
   getResumeDownloadUrl,
 } from "../services/about.service.js";
 
@@ -24,10 +23,8 @@ const deleteResumeFile = asyncHandler(async (req, res) => {
 });
 
 const previewResume = asyncHandler(async (_req, res) => {
-  const preview = await getResumePreview();
-  return res
-    .status(200)
-    .json(new ApiResponse(200, preview, "Resume preview fetched successfully"));
+  const url = await getResumeDownloadUrl();
+  return res.redirect(url);
 });
 
 const downloadResume = asyncHandler(async (_req, res) => {
