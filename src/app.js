@@ -42,6 +42,7 @@ import postRouter from "./routers/post.router.js";
 import likeRouter from "./routers/like.router.js";
 import subscriptionRouter from "./routers/subscription.router.js";
 import commentRouter from "./routers/comment.router.js";
+import aboutRouter from "./routers/about.router.js";
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/users", profileRouter);
@@ -50,6 +51,7 @@ app.use("/api/v1/like", likeRouter);
 app.use("/api/v1/likes", likeRouter);
 app.use("/api/v1/subscriptions", subscriptionRouter);
 app.use("/api/v1/comments", commentRouter);
+app.use("/api/v1/about", aboutRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

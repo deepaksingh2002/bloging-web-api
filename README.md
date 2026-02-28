@@ -54,6 +54,17 @@ REFRESH_TOKEN_EXPIRY=10d
 CLOUDINARY_CLOUD=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
+
+OWNER_EMAIL=owner@example.com
+# Optional alternative owner match by user id
+OWNER_USER_ID=65f2d9f6e2f8db1e4f9db123
+
+# About public-route limiter
+ABOUT_PUBLIC_RATE_LIMIT_WINDOW_MS=60000
+ABOUT_PUBLIC_RATE_LIMIT_MAX=120
+
+# 5MB default
+RESUME_MAX_SIZE_BYTES=5242880
 ```
 
 Note: Database name is taken from `constants.js` (`DB_NAME`).
@@ -82,6 +93,7 @@ Server starts on `http://localhost:<PORT>` and mounts APIs under `/api/v1`.
 - `/api/v1/post`
 - `/api/v1/like`
 - `/api/v1/subscriptions`
+- `/api/v1/about`
 
 ## Main Routes
 
@@ -116,6 +128,44 @@ Server starts on `http://localhost:<PORT>` and mounts APIs under `/api/v1`.
 - `GET /c/:channelId`
 - `POST /c/:channelId`
 - `GET /u/:subscriberId`
+
+### About Routes (`/api/v1/about`)
+
+- `GET /` (public)
+- `PUT /` (owner/admin only)
+- `POST /resume` (owner/admin only, multipart: `resume` PDF)
+- `GET /resume/download` (public)
+
+## About API Curl Examples
+
+```bash
+# Public: fetch about profile
+curl -X GET http://localhost:8000/api/v1/about
+
+# Owner/Admin: update about profile
+curl -X PUT http://localhost:8000/api/v1/about \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fullName": "Deepak Singh",
+    "headline": "Backend Engineer",
+    "summary": "I build reliable APIs and systems.",
+    "location": "Bengaluru, India",
+    "email": "owner@example.com",
+    "phone": "+91-9999999999",
+    "skills": ["Node.js", "Express", "MongoDB"],
+    "experience": "5+ years building production APIs",
+    "education": "B.Tech CSE"
+  }'
+
+# Owner/Admin: upload PDF resume (max 5MB)
+curl -X POST http://localhost:8000/api/v1/about/resume \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -F "resume=@./resume.pdf;type=application/pdf"
+
+# Public: download/redirect resume
+curl -L -X GET http://localhost:8000/api/v1/about/resume/download
+```
 
 ## Authentication
 

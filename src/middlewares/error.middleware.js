@@ -6,6 +6,11 @@ const notFoundHandler = (req, _res, next) => {
 };
 
 const errorHandler = (err, _req, res, _next) => {
+  if (err?.name === "MulterError" && err?.code === "LIMIT_FILE_SIZE") {
+    err.statusCode = 400;
+    err.message = "File is too large";
+  }
+
   // Final error middleware that normalizes all errors into JSON payloads.
   const statusCode = err?.statusCode && Number(err.statusCode) >= 400
     ? Number(err.statusCode)
