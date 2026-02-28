@@ -4,7 +4,9 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyOwnerAccess } from "../middlewares/owner.middleware.js";
 import {
   getAbout,
-  putAbout,
+  getAboutForDashboard,
+  createAbout,
+  updateAbout,
   uploadResume,
   downloadResume,
 } from "../controllers/about.controller.js";
@@ -32,7 +34,10 @@ const resumeUpload = multer({
 const router = Router();
 
 router.get("/", aboutPublicLimiter, getAbout);
-router.put("/", verifyJWT, verifyOwnerAccess, putAbout);
+router.get("/dashboard", verifyJWT, verifyOwnerAccess, getAboutForDashboard);
+router.post("/", verifyJWT, verifyOwnerAccess, createAbout);
+router.patch("/", verifyJWT, verifyOwnerAccess, updateAbout);
+router.put("/", verifyJWT, verifyOwnerAccess, updateAbout);
 router.post(
   "/resume",
   verifyJWT,

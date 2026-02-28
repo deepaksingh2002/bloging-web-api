@@ -37,17 +37,14 @@ const aboutProfileSchema = new Schema(
     },
     headline: {
       type: String,
-      required: true,
       trim: true,
     },
     summary: {
       type: String,
-      required: true,
       trim: true,
     },
     location: {
       type: String,
-      required: true,
       trim: true,
     },
     email: {
@@ -59,7 +56,6 @@ const aboutProfileSchema = new Schema(
     },
     phone: {
       type: String,
-      required: true,
       trim: true,
     },
     skills: {
@@ -74,12 +70,10 @@ const aboutProfileSchema = new Schema(
     },
     experience: {
       type: String,
-      required: true,
       trim: true,
     },
     education: {
       type: String,
-      required: true,
       trim: true,
     },
     resumeUrl: {

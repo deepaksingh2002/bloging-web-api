@@ -73,6 +73,49 @@ const getAboutProfile = async () => {
   return AboutProfile.findOne(SINGLETON_FILTER).lean();
 };
 
+const createAboutProfile = async (payload, updatedBy) => {
+  const existing = await AboutProfile.findOne(SINGLETON_FILTER).lean();
+  if (existing) {
+    throw new ApiError(409, "About profile already exists");
+  }
+
+  const safePayload = validatePayload(payload, true);
+
+  if (updatedBy) {
+    safePayload.updatedBy = updatedBy;
+  }
+
+  return AboutProfile.create({
+    ...safePayload,
+    singletonKey: SINGLETON_FILTER.singletonKey,
+  });
+};
+
+const updateAboutProfile = async (payload, updatedBy) => {
+  const existing = await AboutProfile.findOne(SINGLETON_FILTER).lean();
+  if (!existing) {
+    throw new ApiError(404, "About profile not found");
+  }
+
+  const safePayload = validatePayload(payload, false);
+  if (Object.keys(safePayload).length === 0) {
+    throw new ApiError(400, "At least one field is required to update");
+  }
+
+  if (updatedBy) {
+    safePayload.updatedBy = updatedBy;
+  }
+
+  return AboutProfile.findOneAndUpdate(
+    SINGLETON_FILTER,
+    { $set: safePayload },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+};
+
 const upsertAboutProfile = async (payload, updatedBy, enforceRequiredFields = false) => {
   const safePayload = validatePayload(payload, enforceRequiredFields);
 
@@ -162,6 +205,8 @@ const setResumeUploaderForTests = (uploader) => {
 
 export {
   getAboutProfile,
+  createAboutProfile,
+  updateAboutProfile,
   upsertAboutProfile,
   updateResume,
   getResumeDownloadUrl,
