@@ -2,12 +2,9 @@ import { Router } from "express";
 import multer from "multer";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import {
-  verifyOwnerAccess,
   verifyDeveloperAccess,
 } from "../middlewares/owner.middleware.js";
 import {
-  getAbout,
-  putAbout,
   uploadResume,
   deleteResumeFile,
   previewResume,
@@ -36,8 +33,6 @@ const resumeUpload = multer({
 
 const router = Router();
 
-router.get("/", aboutPublicLimiter, getAbout);
-router.put("/", verifyJWT, verifyOwnerAccess, putAbout);
 router.post(
   "/aboutMe/resume",
   verifyJWT,

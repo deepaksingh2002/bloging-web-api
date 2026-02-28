@@ -61,90 +61,23 @@ after(async () => {
   }
 });
 
-test("public GET /api/v1/about returns about profile", async () => {
-  await AboutProfile.create({
-    singletonKey: "about_profile",
-    fullName: "Owner User",
-    headline: "Backend Engineer",
-    summary: "I build APIs",
-    location: "Remote",
-    email: "owner@example.com",
-    phone: "+123456789",
-    skills: ["Node.js", "MongoDB"],
-    experience: "5 years",
-    education: "B.Tech",
-    updatedBy: ownerUser._id,
-  });
-
-  const response = await request(app).get("/api/v1/about");
-
-  assert.equal(response.status, 200);
-  assert.equal(response.body.success, true);
-  assert.equal(response.body.data.fullName, "Owner User");
-});
-
-test("owner can update about profile", async () => {
-  const token = makeAccessToken(ownerUser._id.toString());
-
-  const response = await request(app)
-    .put("/api/v1/about")
-    .set("Authorization", `Bearer ${token}`)
-    .send({
-      fullName: "Owner User",
-      headline: "Senior Backend Engineer",
-      summary: "Building scalable systems",
-      location: "Bengaluru",
-      email: "owner@example.com",
-      phone: "+919999999999",
-      skills: ["Node.js", "Express", "MongoDB"],
-      experience: "6 years",
-      education: "B.Tech CSE",
-    });
-
-  assert.equal(response.status, 200);
-  assert.equal(response.body.success, true);
-  assert.equal(response.body.data.headline, "Senior Backend Engineer");
-});
-
-test("non-owner is blocked from updating about profile", async () => {
+test("only owner match can upload resume", async () => {
   const token = makeAccessToken(nonOwnerUser._id.toString());
 
-  const response = await request(app)
-    .put("/api/v1/about")
+  const uploadResponse = await request(app)
+    .post("/api/v1/about/aboutMe/resume")
     .set("Authorization", `Bearer ${token}`)
-    .send({
-      fullName: "Owner User",
-      headline: "Senior Backend Engineer",
-      summary: "Building scalable systems",
-      location: "Bengaluru",
-      email: "owner@example.com",
-      phone: "+919999999999",
-      skills: ["Node.js", "Express", "MongoDB"],
-      experience: "6 years",
-      education: "B.Tech CSE",
+    .attach("resume", Buffer.from("%PDF-1.4 mocked"), {
+      filename: "resume.pdf",
+      contentType: "application/pdf",
     });
 
-  assert.equal(response.status, 403);
-  assert.equal(response.body.success, false);
+  assert.equal(uploadResponse.status, 403);
+  assert.equal(uploadResponse.body.success, false);
 });
 
-test("owner resume upload and public download flow works", async () => {
+test("owner can upload and delete resume", async () => {
   const token = makeAccessToken(ownerUser._id.toString());
-
-  await request(app)
-    .put("/api/v1/about")
-    .set("Authorization", `Bearer ${token}`)
-    .send({
-      fullName: "Owner User",
-      headline: "Senior Backend Engineer",
-      summary: "Building scalable systems",
-      location: "Bengaluru",
-      email: "owner@example.com",
-      phone: "+919999999999",
-      skills: ["Node.js", "Express", "MongoDB"],
-      experience: "6 years",
-      education: "B.Tech CSE",
-    });
 
   const uploadResponse = await request(app)
     .post("/api/v1/about/aboutMe/resume")
@@ -157,6 +90,31 @@ test("owner resume upload and public download flow works", async () => {
   assert.equal(uploadResponse.status, 200);
   assert.equal(uploadResponse.body.success, true);
   assert.equal(uploadResponse.body.data.resumeUrl, "https://cdn.example.com/resume.pdf");
+
+  const deleteResponse = await request(app)
+    .delete("/api/v1/about/aboutMe/resume")
+    .set("Authorization", `Bearer ${token}`);
+
+  assert.equal(deleteResponse.status, 200);
+  assert.equal(deleteResponse.body.success, true);
+  assert.equal(deleteResponse.body.data.resumeUrl, "");
+});
+
+test("public preview and download work after owner upload", async () => {
+  const token = makeAccessToken(ownerUser._id.toString());
+
+  await request(app)
+    .post("/api/v1/about/aboutMe/resume")
+    .set("Authorization", `Bearer ${token}`)
+    .attach("resume", Buffer.from("%PDF-1.4 mocked"), {
+      filename: "resume.pdf",
+      contentType: "application/pdf",
+    });
+
+  const previewResponse = await request(app).get("/api/v1/about/aboutMe/resume/preview");
+  assert.equal(previewResponse.status, 200);
+  assert.equal(previewResponse.body.success, true);
+  assert.equal(previewResponse.body.data.url, "https://cdn.example.com/resume.pdf");
 
   const downloadResponse = await request(app).get("/api/v1/about/aboutMe/resume/download");
   assert.equal(downloadResponse.status, 302);
