@@ -73,6 +73,28 @@ const getAboutProfile = async () => {
   return AboutProfile.findOne(SINGLETON_FILTER).lean();
 };
 
+const getAboutOrThrow = async () => {
+  const about = await AboutProfile.findOne(SINGLETON_FILTER);
+  if (!about) {
+    throw new ApiError(404, "About profile not found");
+  }
+  return about;
+};
+
+const getAboutWithResumeOrThrow = async (lean = false) => {
+  const query = AboutProfile.findOne(SINGLETON_FILTER);
+  const about = lean ? await query.lean() : await query;
+
+  if (!about) {
+    throw new ApiError(404, "About profile not found");
+  }
+  if (!about.resumeUrl) {
+    throw new ApiError(404, "Resume not found");
+  }
+
+  return about;
+};
+
 const upsertAboutProfile = async (payload, updatedBy, enforceRequiredFields = false) => {
   const safePayload = validatePayload(payload, enforceRequiredFields);
 
@@ -100,10 +122,7 @@ const updateResume = async (file, updatedBy) => {
     throw new ApiError(400, "Resume file is required");
   }
 
-  const existing = await AboutProfile.findOne(SINGLETON_FILTER);
-  if (!existing) {
-    throw new ApiError(400, "Create about profile before uploading resume");
-  }
+  const existing = await getAboutOrThrow();
 
   const uploaded = await resumeUploader(filePayload);
 
@@ -111,8 +130,9 @@ const updateResume = async (file, updatedBy) => {
     throw new ApiError(500, "Failed to upload resume");
   }
 
-  if (existing?.resumeUrl) {
-    const oldPublicId = extractPublicId(existing.resumeUrl);
+  if (existing.resumeUrl) {
+    const oldPublicId =
+      existing.resumeFile?.publicId || extractPublicId(existing.resumeUrl);
     if (oldPublicId) {
       await deleteFromCloudinary(oldPublicId, { resource_type: "raw" });
     }
@@ -136,8 +156,6 @@ const updateResume = async (file, updatedBy) => {
     },
     {
       new: true,
-      upsert: true,
-      setDefaultsOnInsert: true,
       runValidators: true,
     }
   );
@@ -146,14 +164,7 @@ const updateResume = async (file, updatedBy) => {
 };
 
 const deleteResume = async (updatedBy) => {
-  const existing = await AboutProfile.findOne(SINGLETON_FILTER);
-  if (!existing) {
-    throw new ApiError(404, "About profile not found");
-  }
-
-  if (!existing.resumeUrl) {
-    throw new ApiError(404, "Resume not found");
-  }
+  const existing = await getAboutWithResumeOrThrow();
 
   const publicId =
     existing.resumeFile?.publicId || extractPublicId(existing.resumeUrl);
@@ -183,13 +194,7 @@ const deleteResume = async (updatedBy) => {
 };
 
 const getResumePreview = async () => {
-  const about = await AboutProfile.findOne(SINGLETON_FILTER).lean();
-  if (!about) {
-    throw new ApiError(404, "About profile not found");
-  }
-  if (!about.resumeUrl) {
-    throw new ApiError(404, "Resume not found");
-  }
+  const about = await getAboutWithResumeOrThrow(true);
 
   return {
     url: about.resumeUrl,
@@ -198,13 +203,7 @@ const getResumePreview = async () => {
 };
 
 const getResumeDownloadUrl = async () => {
-  const about = await AboutProfile.findOne(SINGLETON_FILTER).lean();
-  if (!about) {
-    throw new ApiError(404, "About profile not found");
-  }
-  if (!about.resumeUrl) {
-    throw new ApiError(404, "Resume not found");
-  }
+  const about = await getAboutWithResumeOrThrow(true);
   return about.resumeUrl;
 };
 

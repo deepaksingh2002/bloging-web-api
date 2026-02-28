@@ -4,7 +4,6 @@
  */
 
 import mongoose from "mongoose";
-// import {config} from "../config/config.js";
 import { DB_NAME } from "../../constants.js";
 
 // Establishes a single MongoDB connection before the HTTP server starts.

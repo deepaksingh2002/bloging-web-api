@@ -45,22 +45,8 @@ router.post(
   resumeUpload.single("resume"),
   uploadResume
 );
-router.post(
-  "/resume",
-  verifyJWT,
-  verifyDeveloperAccess,
-  resumeUpload.single("resume"),
-  uploadResume
-);
 router.put(
   "/aboutMe/resume",
-  verifyJWT,
-  verifyDeveloperAccess,
-  resumeUpload.single("resume"),
-  uploadResume
-);
-router.put(
-  "/resume",
   verifyJWT,
   verifyDeveloperAccess,
   resumeUpload.single("resume"),
@@ -72,10 +58,7 @@ router.delete(
   verifyDeveloperAccess,
   deleteResumeFile
 );
-router.delete("/resume", verifyJWT, verifyDeveloperAccess, deleteResumeFile);
 router.get("/aboutMe/resume/preview", aboutPublicLimiter, previewResume);
 router.get("/aboutMe/resume/download", aboutPublicLimiter, downloadResume);
-router.get("/resume/preview", aboutPublicLimiter, previewResume);
-router.get("/resume/download", aboutPublicLimiter, downloadResume);
 
 export default router;

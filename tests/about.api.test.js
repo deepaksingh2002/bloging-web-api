@@ -147,7 +147,7 @@ test("owner resume upload and public download flow works", async () => {
     });
 
   const uploadResponse = await request(app)
-    .post("/api/v1/about/resume")
+    .post("/api/v1/about/aboutMe/resume")
     .set("Authorization", `Bearer ${token}`)
     .attach("resume", Buffer.from("%PDF-1.4 mocked"), {
       filename: "resume.pdf",
@@ -158,7 +158,7 @@ test("owner resume upload and public download flow works", async () => {
   assert.equal(uploadResponse.body.success, true);
   assert.equal(uploadResponse.body.data.resumeUrl, "https://cdn.example.com/resume.pdf");
 
-  const downloadResponse = await request(app).get("/api/v1/about/resume/download");
+  const downloadResponse = await request(app).get("/api/v1/about/aboutMe/resume/download");
   assert.equal(downloadResponse.status, 302);
   assert.equal(downloadResponse.headers.location, "https://cdn.example.com/resume.pdf");
 });
