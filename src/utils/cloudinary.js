@@ -42,10 +42,10 @@ export const uploadOnCloudinary = async (fileOrBuffer) => {
     }
 };
 
-export const deleteFromCloudinary = async (publicId) => {
+export const deleteFromCloudinary = async (publicId, options = {}) => {
     // Removes previously uploaded assets using Cloudinary public_id.
     try {
-        await cloudinary.uploader.destroy(publicId);
+        await cloudinary.uploader.destroy(publicId, options);
     } catch (error) {
         console.error("Cloudinary delete error:", error);
     }

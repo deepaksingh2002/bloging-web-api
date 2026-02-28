@@ -1,13 +1,16 @@
 import { Router } from "express";
 import multer from "multer";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { verifyOwnerAccess } from "../middlewares/owner.middleware.js";
+import {
+  verifyOwnerAccess,
+  verifyDeveloperAccess,
+} from "../middlewares/owner.middleware.js";
 import {
   getAbout,
-  getAboutForDashboard,
-  createAbout,
-  updateAbout,
+  putAbout,
   uploadResume,
+  deleteResumeFile,
+  previewResume,
   downloadResume,
 } from "../controllers/about.controller.js";
 import { createInMemoryRateLimiter } from "../middlewares/rateLimit.middleware.js";
@@ -34,17 +37,45 @@ const resumeUpload = multer({
 const router = Router();
 
 router.get("/", aboutPublicLimiter, getAbout);
-router.get("/dashboard", verifyJWT, verifyOwnerAccess, getAboutForDashboard);
-router.post("/", verifyJWT, verifyOwnerAccess, createAbout);
-router.patch("/", verifyJWT, verifyOwnerAccess, updateAbout);
-router.put("/", verifyJWT, verifyOwnerAccess, updateAbout);
+router.put("/", verifyJWT, verifyOwnerAccess, putAbout);
 router.post(
-  "/resume",
+  "/aboutMe/resume",
   verifyJWT,
-  verifyOwnerAccess,
+  verifyDeveloperAccess,
   resumeUpload.single("resume"),
   uploadResume
 );
+router.post(
+  "/resume",
+  verifyJWT,
+  verifyDeveloperAccess,
+  resumeUpload.single("resume"),
+  uploadResume
+);
+router.put(
+  "/aboutMe/resume",
+  verifyJWT,
+  verifyDeveloperAccess,
+  resumeUpload.single("resume"),
+  uploadResume
+);
+router.put(
+  "/resume",
+  verifyJWT,
+  verifyDeveloperAccess,
+  resumeUpload.single("resume"),
+  uploadResume
+);
+router.delete(
+  "/aboutMe/resume",
+  verifyJWT,
+  verifyDeveloperAccess,
+  deleteResumeFile
+);
+router.delete("/resume", verifyJWT, verifyDeveloperAccess, deleteResumeFile);
+router.get("/aboutMe/resume/preview", aboutPublicLimiter, previewResume);
+router.get("/aboutMe/resume/download", aboutPublicLimiter, downloadResume);
+router.get("/resume/preview", aboutPublicLimiter, previewResume);
 router.get("/resume/download", aboutPublicLimiter, downloadResume);
 
 export default router;
