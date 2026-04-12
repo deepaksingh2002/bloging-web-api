@@ -1,8 +1,3 @@
-/**
- * File: D:/Fs/Blog/backend/src/controllers/like.controller.js
- * Purpose: Like/unlike handlers for posts and comments.
- */
-
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -11,115 +6,101 @@ import { Like } from "../models/likes.model.js";
 import { Comment } from "../models/comment.model.js";
 import mongoose from "mongoose";
 
-/**
- * Toggle like state for a post.
- */
-const togglePostLike = asyncHandler(async (req, res) => {
-  const postId =
-    req.params?.postId ||
-    req.body?.postId ||
-    req.body?.post ||
-    req.query?.postId ||
-    req.query?.post;
+const extractEntityId = (req, entity) =>
+  req.params?.[`${entity}Id`] ||
+  req.body?.[`${entity}Id`] ||
+  req.body?.[entity] ||
+  req.query?.[`${entity}Id`] ||
+  req.query?.[entity];
+
+const assertEntityExists = async (Model, id, entityLabel) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, `Invalid ${entityLabel} id`);
+  }
+
+  const exists = await Model.exists({ _id: id });
+  if (!exists) {
+    throw new ApiError(404, `${entityLabel} not found`);
+  }
+};
+
+const toggleLikeForTarget = async ({
+  req,
+  res,
+  targetField,
+  targetId,
+  successLabel,
+}) => {
   const userId = req.user._id;
+  const query = { [targetField]: targetId, user: userId };
 
-  if (!mongoose.Types.ObjectId.isValid(postId)) {
-    throw new ApiError(400, "Invalid post id");
-  }
-
-  const post = await Post.findById(postId);
-  if (!post) {
-    throw new ApiError(404, "Post not found");
-  }
-
-  const deletedLike = await Like.findOneAndDelete({ post: postId, user: userId });
+  const deletedLike = await Like.findOneAndDelete(query);
   if (deletedLike) {
-    const likesCount = await Like.countDocuments({ post: postId });
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        { liked: false, likesCount },
-        "Post unliked successfully"
-      )
-    );
+    const likesCount = await Like.countDocuments({ [targetField]: targetId });
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { liked: false, likesCount },
+          `${successLabel} unliked successfully`
+        )
+      );
   }
 
   try {
-    const newLike = new Like({
-      post: postId,
-      user: userId,
-    });
-    await newLike.save();
+    await Like.create({ [targetField]: targetId, user: userId });
   } catch (error) {
     // Concurrent requests can race into duplicate-key errors; treat as idempotent like.
     if (error?.code !== 11000) {
       throw error;
     }
   }
-  const likesCount = await Like.countDocuments({ post: postId });
 
-  return res.status(200).json(
-    new ApiResponse(200, { liked: true, likesCount }, "Post liked successfully")
-  );
+  const likesCount = await Like.countDocuments({ [targetField]: targetId });
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { liked: true, likesCount },
+        `${successLabel} liked successfully`
+      )
+    );
+};
+
+/**
+ * Toggle like state for a post.
+ */
+const togglePostLike = asyncHandler(async (req, res) => {
+  const postId = extractEntityId(req, "post");
+
+  await assertEntityExists(Post, postId, "Post");
+
+  return toggleLikeForTarget({
+    req,
+    res,
+    targetField: "post",
+    targetId: postId,
+    successLabel: "Post",
+  });
 });
 
 /**
  * Toggle like state for a comment.
  */
 const toggleCommentLike = asyncHandler(async (req, res) => {
-  const commentId =
-    req.params?.commentId ||
-    req.body?.commentId ||
-    req.body?.comment ||
-    req.query?.commentId ||
-    req.query?.comment;
-  const userId = req.user._id;
+  const commentId = extractEntityId(req, "comment");
 
-  if (!mongoose.Types.ObjectId.isValid(commentId)) {
-    throw new ApiError(400, "Invalid comment id");
-  }
+  await assertEntityExists(Comment, commentId, "Comment");
 
-  const comment = await Comment.findById(commentId);
-  if (!comment) {
-    throw new ApiError(404, "Comment not found");
-  }
-
-  const deletedLike = await Like.findOneAndDelete({
-    comment: commentId,
-    user: userId,
+  return toggleLikeForTarget({
+    req,
+    res,
+    targetField: "comment",
+    targetId: commentId,
+    successLabel: "Comment",
   });
-  if (deletedLike) {
-    const likesCount = await Like.countDocuments({ comment: commentId });
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        { liked: false, likesCount },
-        "Comment unliked successfully"
-      )
-    );
-  }
-
-  try {
-    const newLike = new Like({
-      comment: commentId,
-      user: userId,
-    });
-    await newLike.save();
-  } catch (error) {
-    // Concurrent requests can race into duplicate-key errors; treat as idempotent like.
-    if (error?.code !== 11000) {
-      throw error;
-    }
-  }
-  const likesCount = await Like.countDocuments({ comment: commentId });
-
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      { liked: true, likesCount },
-      "Comment liked successfully"
-    )
-  );
 });
 
 /**
@@ -140,13 +121,19 @@ const getLikedPosts = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 })
     .lean();
 
+  const seenPostIds = new Set();
   const posts = likedPosts
     .map((like) => like.post)
     .filter(Boolean)
-    .filter(
-      (post, index, arr) =>
-        arr.findIndex((p) => String(p._id) === String(post._id)) === index
-    );
+    .filter((post) => {
+      // Keep only first occurrence for any pre-existing duplicate records.
+      const postId = String(post._id);
+      if (seenPostIds.has(postId)) {
+        return false;
+      }
+      seenPostIds.add(postId);
+      return true;
+    });
 
   return res.status(200).json(
     new ApiResponse(

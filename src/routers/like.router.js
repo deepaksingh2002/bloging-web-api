@@ -15,8 +15,14 @@ const router = Router();
 
 router.use(verifyJWT);
 
+// Canonical REST-like endpoints.
 router.route("/posts/:postId/like").patch(togglePostLike).post(togglePostLike);
 router.route("/comments/:commentId/like").patch(toggleCommentLike).post(toggleCommentLike);
 router.get("/liked-posts", getLikedPosts);
+
+// Backward-compatible aliases kept for existing clients.
+router.route("/toggle/post/:postId").post(togglePostLike).patch(togglePostLike);
+router.route("/toggle/comment/:commentId").post(toggleCommentLike).patch(toggleCommentLike);
+router.get("/liked/posts", getLikedPosts);
 
 export default router;

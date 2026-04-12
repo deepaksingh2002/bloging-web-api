@@ -91,7 +91,8 @@ Server starts on `http://localhost:<PORT>` and mounts APIs under `/api/v1`.
 
 - `/api/v1/users`
 - `/api/v1/post`
-- `/api/v1/like`
+- `/api/v1/like` (legacy alias)
+- `/api/v1/likes` (recommended)
 - `/api/v1/subscriptions`
 - `/api/v1/about`
 
@@ -117,7 +118,13 @@ Server starts on `http://localhost:<PORT>` and mounts APIs under `/api/v1`.
 - `DELETE /delete-post/:postId` (auth)
 - `PUT /update-post/:postId` (auth, optional multipart: `thumbnail`)
 
-### Like Routes (`/api/v1/like`) - auth required for all
+### Like Routes (`/api/v1/likes`) - auth required for all
+
+- `PATCH /posts/:postId/like` (also accepts `POST`)
+- `PATCH /comments/:commentId/like` (also accepts `POST`)
+- `GET /liked-posts`
+
+Legacy aliases (still supported):
 
 - `POST /toggle/post/:postId`
 - `POST /toggle/comment/:commentId`

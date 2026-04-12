@@ -5,6 +5,8 @@
 
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Post } from "../models/post.model.js";
+import { Comment } from "../models/comment.model.js";
+import { Like } from "../models/likes.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import {
   uploadOnCloudinary,
@@ -153,10 +155,24 @@ const getPostById = asyncHandler(async (req, res) => {
 const deletePost = asyncHandler(async (req, res) => {
   const { postId } = req.params;
 
-  const post = await Post.findByIdAndDelete(postId);
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    throw new ApiError(400, "Invalid Post ID");
+  }
+
+  const post = await Post.findById(postId).select("_id");
   if (!post) {
     throw new ApiError(404, "Post not found");
   }
+
+  const commentIds = await Comment.find({ post: postId }).distinct("_id");
+
+  if (commentIds.length) {
+    await Like.deleteMany({ comment: { $in: commentIds } });
+    await Comment.deleteMany({ post: postId });
+  }
+
+  await Like.deleteMany({ post: postId });
+  await Post.findByIdAndDelete(postId);
 
   return res.status(200).json(
     new ApiResponse(200, null, "Post deleted successfully")
