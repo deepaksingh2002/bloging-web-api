@@ -141,6 +141,9 @@ Legacy aliases (still supported):
 - `GET /` (public)
 - `PUT /` (owner/admin only)
 - `POST /resume` (owner/admin only, multipart: `resume` PDF)
+- `PUT /resume` (owner/admin only, multipart: `resume` PDF)
+- `DELETE /resume` (owner/admin only)
+- `GET /resume/preview` (public)
 - `GET /resume/download` (public)
 
 ## About API Curl Examples

@@ -8,7 +8,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { app } from "../src/app.js";
 import { User } from "../src/models/user.model.js";
 import { AboutProfile } from "../src/models/aboutProfile.model.js";
-import { setResumeUploaderForTests } from "../src/services/about.service.js";
+import { setResumeUploaderForTests } from "../src/services/resume.service.js";
 
 let mongod;
 let ownerUser;
@@ -65,7 +65,7 @@ test("only owner match can upload resume", async () => {
   const token = makeAccessToken(nonOwnerUser._id.toString());
 
   const uploadResponse = await request(app)
-    .post("/api/v1/about/aboutMe/resume")
+    .post("/api/v1/about/resume")
     .set("Authorization", `Bearer ${token}`)
     .attach("resume", Buffer.from("%PDF-1.4 mocked"), {
       filename: "resume.pdf",
@@ -80,7 +80,7 @@ test("owner can upload and delete resume", async () => {
   const token = makeAccessToken(ownerUser._id.toString());
 
   const uploadResponse = await request(app)
-    .post("/api/v1/about/aboutMe/resume")
+    .post("/api/v1/about/resume")
     .set("Authorization", `Bearer ${token}`)
     .attach("resume", Buffer.from("%PDF-1.4 mocked"), {
       filename: "resume.pdf",
@@ -92,7 +92,7 @@ test("owner can upload and delete resume", async () => {
   assert.equal(uploadResponse.body.data.resumeUrl, "https://cdn.example.com/resume.pdf");
 
   const deleteResponse = await request(app)
-    .delete("/api/v1/about/aboutMe/resume")
+    .delete("/api/v1/about/resume")
     .set("Authorization", `Bearer ${token}`);
 
   assert.equal(deleteResponse.status, 200);
@@ -104,18 +104,18 @@ test("public preview and download work after owner upload", async () => {
   const token = makeAccessToken(ownerUser._id.toString());
 
   await request(app)
-    .post("/api/v1/about/aboutMe/resume")
+    .post("/api/v1/about/resume")
     .set("Authorization", `Bearer ${token}`)
     .attach("resume", Buffer.from("%PDF-1.4 mocked"), {
       filename: "resume.pdf",
       contentType: "application/pdf",
     });
 
-  const previewResponse = await request(app).get("/api/v1/about/aboutMe/resume/preview");
+  const previewResponse = await request(app).get("/api/v1/about/resume/preview");
   assert.equal(previewResponse.status, 302);
   assert.equal(previewResponse.headers.location, "https://cdn.example.com/resume.pdf");
 
-  const downloadResponse = await request(app).get("/api/v1/about/aboutMe/resume/download");
+  const downloadResponse = await request(app).get("/api/v1/about/resume/download");
   assert.equal(downloadResponse.status, 302);
   assert.equal(downloadResponse.headers.location, "https://cdn.example.com/resume.pdf");
 });

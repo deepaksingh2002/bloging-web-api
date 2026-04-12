@@ -25,7 +25,7 @@ const getAboutWithResumeOrThrow = async (lean = false) => {
   return about;
 };
 
-const updateResume = async (file, updatedBy) => {
+const createResume = async (file, updatedBy) => {
   if (file?.mimetype && file.mimetype !== PDF_MIME_TYPE) {
     throw new ApiError(400, "Only PDF resume uploads are allowed");
   }
@@ -118,7 +118,7 @@ const setResumeUploaderForTests = (uploader) => {
 };
 
 export {
-  updateResume,
+  createResume,
   deleteResume,
   getResumeDownloadUrl,
   setResumeUploaderForTests,
