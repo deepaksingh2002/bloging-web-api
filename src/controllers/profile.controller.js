@@ -3,12 +3,11 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
-import { Post } from "../models/post.model.js";
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import fs from "fs";
 
 /**
- * Return current user's profile and authored posts.
+ * Return current normal user's profile.
  */
 const userProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).select("-password -refreshToken");
@@ -17,12 +16,8 @@ const userProfile = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
-  const posts = await Post.find({ owner: req.user._id })
-    .sort({ createdAt: -1 })
-    .select("title thumbnail catagry views isPublished createdAt updatedAt owner");
-
   return res.status(200).json(
-    new ApiResponse(200, { user, posts }, "User profile fetched successfully")
+    new ApiResponse(200, { user }, "User profile fetched successfully")
   );
 });
 

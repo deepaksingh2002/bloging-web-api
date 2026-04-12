@@ -191,6 +191,56 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Submit author application form for the logged-in user.
+ */
+const applyForAuthor = asyncHandler(async (req, res) => {
+  const { bio, expertise, portfolioUrl, motivation } = req.body;
+
+  if (!motivation || !String(motivation).trim()) {
+    throw new ApiError(400, "Motivation is required");
+  }
+
+  const user = await User.findById(req.user?._id);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  if (user.role === "author") {
+    throw new ApiError(400, "You are already an author");
+  }
+
+  if (user.role === "admin") {
+    throw new ApiError(400, "Admin account cannot apply for author role");
+  }
+
+  if (user.authorApplication?.status === "pending") {
+    throw new ApiError(409, "Author application already pending");
+  }
+
+  user.authorApplication = {
+    status: "pending",
+    bio: bio?.trim() || "",
+    expertise: expertise?.trim() || "",
+    portfolioUrl: portfolioUrl?.trim() || "",
+    motivation: motivation.trim(),
+    appliedAt: new Date(),
+    reviewedAt: undefined,
+    reviewedBy: undefined,
+    rejectionReason: "",
+  };
+
+  await user.save();
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      { authorApplication: user.authorApplication },
+      "Author application submitted successfully"
+    )
+  );
+});
+
+/**
  * Validate refresh token and rotate access/refresh tokens.
  */
 const refreshAccessToken = asyncHandler(async (req, res) => {
@@ -297,6 +347,7 @@ export {
   logInUser,
   logOutUser,
   getCurrentUser,
+  applyForAuthor,
   refreshAccessToken,
   getSessionDebug,
 };

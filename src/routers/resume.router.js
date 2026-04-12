@@ -1,9 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import {
-  verifyDeveloperAccess,
-} from "../middlewares/owner.middleware.js";
+import { requireAdmin } from "../middlewares/role.middleware.js";
 import {
   createResumeHandler,
   deleteResumeFile,
@@ -35,14 +33,14 @@ const router = Router();
 
 const resumeProtectedMiddlewares = [
   verifyJWT,
-  verifyDeveloperAccess,
+  requireAdmin,
   resumeUpload.single("resume"),
 ];
 
 // Canonical resume routes.
 router.post("/resume", ...resumeProtectedMiddlewares, createResumeHandler);
 router.put("/resume", ...resumeProtectedMiddlewares, createResumeHandler);
-router.delete("/resume", verifyJWT, verifyDeveloperAccess, deleteResumeFile);
+router.delete("/resume", verifyJWT, requireAdmin, deleteResumeFile);
 router.get("/resume/preview", resumePublicLimiter, previewResume);
 router.get("/resume/download", resumePublicLimiter, downloadResume);
 

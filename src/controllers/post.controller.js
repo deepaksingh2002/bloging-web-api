@@ -12,6 +12,12 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import fs from "fs";
 import mongoose from "mongoose";
 
+const ensurePostOwnership = (post, userId) => {
+  if (String(post.owner) !== String(userId)) {
+    throw new ApiError(403, "You are not allowed to modify this post");
+  }
+};
+
 /**
  * Create a new post with thumbnail upload.
  */
@@ -154,10 +160,12 @@ const deletePost = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid Post ID");
   }
 
-  const post = await Post.findById(postId).select("_id");
+  const post = await Post.findById(postId).select("_id owner");
   if (!post) {
     throw new ApiError(404, "Post not found");
   }
+
+  ensurePostOwnership(post, req.user?._id);
 
   const commentIds = await Comment.find({ post: postId }).distinct("_id");
 
@@ -181,10 +189,16 @@ const updatePost = asyncHandler(async (req, res) => {
   const { title, content, catagry } = req.body;
   const { postId } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    throw new ApiError(400, "Invalid Post ID");
+  }
+
   const existingPost = await Post.findById(postId);
   if (!existingPost) {
     throw new ApiError(404, "Post not found");
   }
+
+  ensurePostOwnership(existingPost, req.user?._id);
 
   let thumbnailUrl = existingPost.thumbnail;
 
