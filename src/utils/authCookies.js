@@ -1,7 +1,4 @@
-/**
- * File: D:/Fs/Blog/backend/src/utils/authCookies.js
- * Purpose: Centralized auth cookie configuration for login/refresh/logout flows.
- */
+
 
 // Converts duration strings like "15m", "1h", "7d" into milliseconds.
 const parseDurationToMs = (duration) => {

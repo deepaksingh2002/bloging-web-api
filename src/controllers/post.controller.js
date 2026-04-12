@@ -1,8 +1,3 @@
-/**
- * File: D:/Fs/Blog/backend/src/controllers/post.controller.js
- * Purpose: Post domain handlers for create/read/update/delete and search APIs.
- */
-
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Post } from "../models/post.model.js";
 import { Comment } from "../models/comment.model.js";

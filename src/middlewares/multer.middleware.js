@@ -1,7 +1,3 @@
-/**
- * File: D:\Fs\Blog\backend\src\middlewares\multer.middleware.js
- * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
- */
 
 import multer from "multer";
 import fs from "fs";

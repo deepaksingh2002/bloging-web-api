@@ -1,7 +1,3 @@
-/**
- * File: D:/Fs/Blog/backend/src/controllers/profile.controller.js
- * Purpose: Profile management handlers for authenticated users.
- */
 
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";

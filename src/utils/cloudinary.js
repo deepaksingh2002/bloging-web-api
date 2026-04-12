@@ -1,7 +1,4 @@
-/**
- * File: D:\Fs\Blog\backend\src\utils\cloudinary.js
- * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
- */
+
 
 import { v2 as cloudinary } from "cloudinary";
 

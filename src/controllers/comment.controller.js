@@ -1,8 +1,3 @@
-/**
- * File: D:/Fs/Blog/backend/src/controllers/comment.controller.js
- * Purpose: Comment handlers for create/read/update/delete flows.
- */
-
 import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";

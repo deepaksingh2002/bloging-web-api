@@ -1,7 +1,4 @@
-/**
- * File: D:/Fs/Blog/backend/src/controllers/user.controllers.js
- * Purpose: Authentication and session handlers for user accounts.
- */
+
 
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";

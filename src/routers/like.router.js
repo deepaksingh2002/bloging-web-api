@@ -1,7 +1,4 @@
-/**
- * File: D:\Fs\Blog\backend\src\routers\like.router.js
- * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
- */
+
 
 import { Router } from "express";
 import {

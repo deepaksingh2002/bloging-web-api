@@ -1,7 +1,4 @@
-/**
- * File: D:\Fs\Blog\backend\src\app.js
- * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
- */
+
 
 import express from "express";
 import cors from "cors";
