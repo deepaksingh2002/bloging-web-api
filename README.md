@@ -91,8 +91,7 @@ Server starts on `http://localhost:<PORT>` and mounts APIs under `/api/v1`.
 
 - `/api/v1/users`
 - `/api/v1/post`
-- `/api/v1/like` (legacy alias)
-- `/api/v1/likes` (recommended)
+- `/api/v1/likes`
 - `/api/v1/subscriptions`
 - `/api/v1/about`
 
@@ -123,12 +122,6 @@ Server starts on `http://localhost:<PORT>` and mounts APIs under `/api/v1`.
 - `PATCH /posts/:postId/like` (also accepts `POST`)
 - `PATCH /comments/:commentId/like` (also accepts `POST`)
 - `GET /liked-posts`
-
-Legacy aliases (still supported):
-
-- `POST /toggle/post/:postId`
-- `POST /toggle/comment/:commentId`
-- `GET /liked/posts`
 
 ### Subscription Routes (`/api/v1/subscriptions`) - auth required for all
 
