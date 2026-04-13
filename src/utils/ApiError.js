@@ -1,7 +1,4 @@
-/**
- * File: D:\Fs\Blog\backend\src\utils\ApiError.js
- * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
- */
+
 
 class ApiError extends Error {
     // Standard error shape used by controllers and middleware.

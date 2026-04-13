@@ -1,7 +1,4 @@
-/**
- * File: D:/Fs/Blog/backend/src/routers/comment.router.js
- * Purpose: Comment API routes.
- */
+
 
 import { Router } from "express";
 import {

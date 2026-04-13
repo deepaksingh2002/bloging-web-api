@@ -1,9 +1,25 @@
-/**
- * File: D:\Fs\Blog\backend\src\utils\cloudinary.js
- * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
- */
+
 
 import { v2 as cloudinary } from "cloudinary";
+
+let uploadHandler = async (fileOrBuffer) => {
+    if (typeof fileOrBuffer === "string") {
+        return cloudinary.uploader.upload(fileOrBuffer, { resource_type: "auto" });
+    }
+
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            { resource_type: "auto" },
+            (error, response) => {
+                if (error) reject(error);
+                else resolve(response);
+            }
+        );
+        uploadStream.end(fileOrBuffer);
+    });
+};
+
+let deleteHandler = async (publicId, options = {}) => cloudinary.uploader.destroy(publicId, options);
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD,
@@ -16,25 +32,7 @@ export const uploadOnCloudinary = async (fileOrBuffer) => {
     if (!fileOrBuffer) return null;
 
     try {
-        // If a string path is provided, use the uploader.upload helper
-        if (typeof fileOrBuffer === "string") {
-            const result = await cloudinary.uploader.upload(fileOrBuffer, { resource_type: "auto" });
-            return result;
-        }
-
-        // Otherwise assume a buffer and upload via upload_stream
-        const result = await new Promise((resolve, reject) => {
-            const uploadStream = cloudinary.uploader.upload_stream(
-                { resource_type: "auto" },
-                (error, response) => {
-                    if (error) reject(error);
-                    else resolve(response);
-                }
-            );
-            uploadStream.end(fileOrBuffer);
-        });
-
-        return result;
+        return await uploadHandler(fileOrBuffer);
 
     } catch (error) {
         console.error("Cloudinary upload failed:", error);
@@ -45,10 +43,15 @@ export const uploadOnCloudinary = async (fileOrBuffer) => {
 export const deleteFromCloudinary = async (publicId, options = {}) => {
     // Removes previously uploaded assets using Cloudinary public_id.
     try {
-        await cloudinary.uploader.destroy(publicId, options);
+        await deleteHandler(publicId, options);
     } catch (error) {
         console.error("Cloudinary delete error:", error);
     }
+};
+
+export const setCloudinaryHandlersForTests = (overrides = {}) => {
+    uploadHandler = overrides.uploadHandler || uploadHandler;
+    deleteHandler = overrides.deleteHandler || deleteHandler;
 };
 
 export const extractPublicId = (url) => {

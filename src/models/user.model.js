@@ -1,7 +1,4 @@
-/**
- * File: D:\Fs\Blog\backend\src\models\user.model.js
- * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
- */
+
 
 import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
@@ -44,8 +41,53 @@ const userSchema = new Schema({
     },
     role: {
         type: String,
+<<<<<<< HEAD
         enum: ["user", "author", "admin", "superadmin"],
+=======
+        enum: ["user", "author", "admin"],
+>>>>>>> 00dbadf2e6bf08ff9c8f137c95c1861007a2c99e
         default: "user"
+    },
+    authorApplication: {
+        status: {
+            type: String,
+            enum: ["none", "pending", "approved", "rejected"],
+            default: "none"
+        },
+        bio: {
+            type: String,
+            trim: true,
+            maxlength: 500
+        },
+        expertise: {
+            type: String,
+            trim: true,
+            maxlength: 200
+        },
+        portfolioUrl: {
+            type: String,
+            trim: true
+        },
+        motivation: {
+            type: String,
+            trim: true,
+            maxlength: 1000
+        },
+        appliedAt: {
+            type: Date
+        },
+        reviewedAt: {
+            type: Date
+        },
+        reviewedBy: {
+            type: Schema.Types.ObjectId,
+            ref: "User"
+        },
+        rejectionReason: {
+            type: String,
+            trim: true,
+            maxlength: 500
+        }
     }
 }, { timestamps: true });
 

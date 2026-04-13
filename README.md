@@ -91,9 +91,11 @@ Server starts on `http://localhost:<PORT>` and mounts APIs under `/api/v1`.
 
 - `/api/v1/users`
 - `/api/v1/post`
-- `/api/v1/like`
+- `/api/v1/likes`
 - `/api/v1/subscriptions`
 - `/api/v1/about`
+- `/api/v1/admin`
+- `/api/v1/author`
 
 ## Main Routes
 
@@ -103,25 +105,51 @@ Server starts on `http://localhost:<PORT>` and mounts APIs under `/api/v1`.
 - `POST /login`
 - `POST /logout` (auth)
 - `GET /currentUser` (auth)
+- `POST /apply-author` (auth, submits author application form)
 - `POST /refresh-token`
-- `GET /profile` (auth)
-- `PATCH /update-profile` (auth)
+- `GET /profile` (auth, normal user role)
+- `PATCH /update-profile` (auth, normal user role)
 - `PATCH /forget-password` (auth)
-- `PATCH /update-avatar` (auth, multipart: `avatar`)
+- `PATCH /update-avatar` (auth, normal user role, multipart: `avatar`)
 
 ### Post Routes (`/api/v1/post`)
 
-- `POST /create-post` (auth, multipart: `thumbnail`)
+- `POST /create-post` (auth + author role, multipart: `thumbnail`)
 - `GET /getAll-post`
 - `GET /get-post/:postId`
-- `DELETE /delete-post/:postId` (auth)
-- `PUT /update-post/:postId` (auth, optional multipart: `thumbnail`)
+- `DELETE /delete-post/:postId` (auth + author role)
+- `PUT /update-post/:postId` (auth + author role, optional multipart: `thumbnail`)
 
-### Like Routes (`/api/v1/like`) - auth required for all
+### Like Routes (`/api/v1/likes`) - auth required for all
 
-- `POST /toggle/post/:postId`
-- `POST /toggle/comment/:commentId`
-- `GET /liked/posts`
+- `PATCH /posts/:postId/like` (also accepts `POST`)
+- `PATCH /comments/:commentId/like` (also accepts `POST`)
+- `GET /liked-posts`
+
+### Admin Routes (`/api/v1/admin`) - admin role required, or the configured owner identity via `OWNER_USER_ID`/`OWNER_EMAIL`
+
+- `GET /dashboard` (admin dashboard metrics via aggregation pipeline)
+  - Optional query params: `from` (ISO date), `to` (ISO date), `recentLimit` (1-50), `pendingLimit` (1-50)
+- `GET /profile` (admin profile and review activity via aggregation pipeline)
+- `GET /moderation-logs?page=1&limit=20` (paginated admin moderation audit trail)
+- `DELETE /posts/:postId` (admin can delete any post; optional `reason` in body/query)
+- `DELETE /comments/:commentId` (admin can delete any comment; optional `reason` in body/query)
+- `GET /author-applications` (list pending author applications)
+- `PATCH /author-applications/:userId/approve` (approve applicant as author)
+- `PATCH /author-applications/:userId` with body `{ "action": "approve" | "reject", "rejectionReason": "optional" }`
+
+### Author Routes (`/api/v1/author`) - author role required for all
+
+- `GET /dashboard` (author metrics for posts, likes, comments, views via aggregation pipeline)
+- `GET /profile` (author profile + recent comments on authored posts via aggregation pipeline)
+- `GET /posts/manage?page=1&limit=10` (author-controlled posts with likes/comments/views)
+
+## Role Access Summary
+
+- Visitor (not logged in): can read posts.
+- Logged-in user: can comment and like posts; can submit author application.
+- Author: can create, update, delete, and monitor own posts from author dashboard/profile.
+- Admin: has full moderation control, including deleting any post/comment, reviewing author applications, and using admin dashboard/profile. The admin guard also accepts the configured owner identity via `OWNER_USER_ID` or `OWNER_EMAIL`.
 
 ### Subscription Routes (`/api/v1/subscriptions`) - auth required for all
 
@@ -134,6 +162,9 @@ Server starts on `http://localhost:<PORT>` and mounts APIs under `/api/v1`.
 - `GET /` (public)
 - `PUT /` (owner/admin only)
 - `POST /resume` (owner/admin only, multipart: `resume` PDF)
+- `PUT /resume` (owner/admin only, multipart: `resume` PDF)
+- `DELETE /resume` (owner/admin only)
+- `GET /resume/preview` (public)
 - `GET /resume/download` (public)
 
 ## About API Curl Examples
@@ -191,3 +222,10 @@ Most endpoints return a consistent shape:
 - File uploads are temporarily stored in `public/temp` before Cloudinary upload.
 - CORS supports comma-separated origins via `CORS_ORIGIN`.
 - `app.set("trust proxy", 1)` is enabled for deployment behind a proxy.
+
+## Test Suites
+
+- `tests/role-user.e2e.test.js` covers visitor and normal user access rules.
+- `tests/role-author.e2e.test.js` covers author dashboard/profile and post management.
+- `tests/role-admin.e2e.test.js` covers admin dashboard/profile, moderation, and audit logs.
+- `tests/role-access.test-helpers.js` contains the shared fixtures and test setup.

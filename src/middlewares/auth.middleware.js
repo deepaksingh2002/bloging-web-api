@@ -1,7 +1,4 @@
-/**
- * File: D:\Fs\Blog\backend\src\middlewares\auth.middleware.js
- * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
- */
+
 
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";

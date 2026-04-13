@@ -1,7 +1,4 @@
-/**
- * File: D:\Fs\Blog\backend\src\utils\ApiResponse.js
- * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
- */
+
 
 class ApiResponse {
     // Standard success response shape used across the API.

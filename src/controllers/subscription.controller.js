@@ -1,7 +1,4 @@
-/**
- * File: D:/Fs/Blog/backend/src/controllers/subscription.controller.js
- * Purpose: Subscription handlers for channel follow/unfollow and listing.
- */
+
 
 import { isValidObjectId } from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";

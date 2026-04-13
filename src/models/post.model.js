@@ -1,7 +1,4 @@
-/**
- * File: D:\Fs\Blog\backend\src\models\post.model.js
- * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
- */
+
 
 import mongoose, { Schema } from "mongoose";
 

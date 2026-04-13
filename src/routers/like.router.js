@@ -1,7 +1,4 @@
-/**
- * File: D:\Fs\Blog\backend\src\routers\like.router.js
- * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
- */
+
 
 import { Router } from "express";
 import {
@@ -15,6 +12,7 @@ const router = Router();
 
 router.use(verifyJWT);
 
+// Canonical REST-like endpoints.
 router.route("/posts/:postId/like").patch(togglePostLike).post(togglePostLike);
 router.route("/comments/:commentId/like").patch(toggleCommentLike).post(toggleCommentLike);
 router.get("/liked-posts", getLikedPosts);

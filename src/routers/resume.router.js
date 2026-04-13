@@ -1,19 +1,17 @@
 import { Router } from "express";
 import multer from "multer";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { requireAdmin } from "../middlewares/role.middleware.js";
 import {
-  verifyDeveloperAccess,
-} from "../middlewares/owner.middleware.js";
-import {
-  uploadResume,
+  createResumeHandler,
   deleteResumeFile,
   previewResume,
   downloadResume,
-} from "../controllers/about.controller.js";
+} from "../controllers/resume.controller.js";
 import { createInMemoryRateLimiter } from "../middlewares/rateLimit.middleware.js";
 import { ApiError } from "../utils/ApiError.js";
 
-const aboutPublicLimiter = createInMemoryRateLimiter({
+const resumePublicLimiter = createInMemoryRateLimiter({
   windowMs: Number(process.env.ABOUT_PUBLIC_RATE_LIMIT_WINDOW_MS || 60_000),
   max: Number(process.env.ABOUT_PUBLIC_RATE_LIMIT_MAX || 120),
   keyPrefix: "about-public",
@@ -33,11 +31,16 @@ const resumeUpload = multer({
 
 const router = Router();
 
+<<<<<<< HEAD:src/routers/about.router.js
 router.post(
   "/resume",
+=======
+const resumeProtectedMiddlewares = [
+>>>>>>> 00dbadf2e6bf08ff9c8f137c95c1861007a2c99e:src/routers/resume.router.js
   verifyJWT,
-  verifyDeveloperAccess,
+  requireAdmin,
   resumeUpload.single("resume"),
+<<<<<<< HEAD:src/routers/about.router.js
   uploadResume
 );
 router.put(
@@ -55,5 +58,15 @@ router.delete(
 );
 router.get("/resume/preview", aboutPublicLimiter, previewResume);
 router.get("/resume/download", aboutPublicLimiter, downloadResume);
+=======
+];
+
+// Canonical resume routes.
+router.post("/resume", ...resumeProtectedMiddlewares, createResumeHandler);
+router.put("/resume", ...resumeProtectedMiddlewares, createResumeHandler);
+router.delete("/resume", verifyJWT, requireAdmin, deleteResumeFile);
+router.get("/resume/preview", resumePublicLimiter, previewResume);
+router.get("/resume/download", resumePublicLimiter, downloadResume);
+>>>>>>> 00dbadf2e6bf08ff9c8f137c95c1861007a2c99e:src/routers/resume.router.js
 
 export default router;

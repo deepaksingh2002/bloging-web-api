@@ -1,7 +1,4 @@
-/**
- * File: D:\Fs\Blog\backend\src\app.js
- * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
- */
+
 
 import express from "express";
 import cors from "cors";
@@ -37,20 +34,22 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 import userRouter from "./routers/user.router.js";
-import profileRouter from "./routers/profile.router.js";
 import postRouter from "./routers/post.router.js";
 import likeRouter from "./routers/like.router.js";
 import subscriptionRouter from "./routers/subscription.router.js";
 import commentRouter from "./routers/comment.router.js";
-import aboutRouter from "./routers/about.router.js";
+import resumeRouter from "./routers/resume.router.js";
+import adminRouter from "./routers/admin.router.js";
+import authorRouter from "./routers/author.router.js";
 
 app.use("/api/v1/users", userRouter);
-app.use("/api/v1/users", profileRouter);
 app.use("/api/v1/post", postRouter);
 app.use("/api/v1/likes", likeRouter);
 app.use("/api/v1/subscriptions", subscriptionRouter);
 app.use("/api/v1/comments", commentRouter);
-app.use("/api/v1/about", aboutRouter);
+app.use("/api/v1/about", resumeRouter);
+app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/author", authorRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

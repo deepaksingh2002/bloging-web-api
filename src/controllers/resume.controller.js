@@ -1,13 +1,13 @@
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {
-  updateResume,
+  createResume,
   deleteResume,
   getResumeDownloadUrl,
-} from "../services/about.service.js";
+} from "../services/resume.service.js";
 
-const uploadResume = asyncHandler(async (req, res) => {
-  const updated = await updateResume(req.file, req.user?._id);
+const createResumeHandler = asyncHandler(async (req, res) => {
+  const updated = await createResume(req.file, req.user?._id);
 
   return res
     .status(200)
@@ -33,7 +33,7 @@ const downloadResume = asyncHandler(async (_req, res) => {
 });
 
 export {
-  uploadResume,
+  createResumeHandler,
   deleteResumeFile,
   previewResume,
   downloadResume,
