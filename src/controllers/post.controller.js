@@ -109,7 +109,7 @@ const createPost = asyncHandler(async (req, res) => {
 const getPosts = asyncHandler(async (req, res) => {
   const posts = await Post.find()
     .select("title thumbnail owner createdAt views")
-    .populate("owner", "username")
+    .populate("owner", "username fullName role authorApplication.status avatar")
     .sort({ createdAt: -1 })
     .lean();
   if (!posts.length) {
@@ -147,7 +147,7 @@ const searchPosts = asyncHandler(async (req, res) => {
 
   const posts = await Post.find(query)
     .select("title thumbnail content catagry owner createdAt views")
-    .populate("owner", "username")
+    .populate("owner", "username fullName role authorApplication.status avatar")
     .sort({ createdAt: -1 })
     .lean();
 
@@ -173,7 +173,7 @@ const getPostById = asyncHandler(async (req, res) => {
     { $inc: { views: 1 } },
     { new: true }
   )
-    .populate("owner", "username")
+    .populate("owner", "username fullName role authorApplication.status avatar")
     .lean();
   if (!post) {
     throw new ApiError(404, "Post not found");
