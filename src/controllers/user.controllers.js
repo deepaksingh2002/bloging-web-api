@@ -9,7 +9,29 @@ import {
   getBaseCookieOptions,
   getRefreshTokenCookieOptions,
 } from "../utils/authCookies.js";
+import { matchesOwnerIdentity } from "../middlewares/owner.middleware.js";
 import jwt from "jsonwebtoken";
+
+const normalizeRole = (role) => String(role || "").trim().toLowerCase();
+
+const withAccessFlags = (user) => {
+  if (!user) return user;
+
+  const baseUser = typeof user.toObject === "function" ? user.toObject() : { ...user };
+  const role = normalizeRole(baseUser.role);
+  const isOwner = matchesOwnerIdentity({ user: baseUser });
+  const isSuperAdmin = role === "superadmin";
+  const isAdmin = role === "admin" || isSuperAdmin || isOwner;
+  const isAuthor = role === "author";
+
+  return {
+    ...baseUser,
+    isOwner,
+    isAdmin,
+    isSuperAdmin,
+    isAuthor,
+  };
+};
 
 const getTokenStatus = (token, secret) => {
   if (!token) return { present: false, status: "missing" };
@@ -132,7 +154,7 @@ const logInUser = asyncHandler(async (req, res) => {
     .status(200)
     .cookie("accessToken", accessToken, accessCookieOptions)
     .cookie("refreshToken", refreshToken, refreshCookieOptions)
-    .json(new ApiResponse(200, { user: loggedInUser }, "Logged in successfully"));
+    .json(new ApiResponse(200, { user: withAccessFlags(loggedInUser) }, "Logged in successfully"));
 });
 
 /**
@@ -187,7 +209,7 @@ const logOutUser = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
-    .json(new ApiResponse(200, req.user, "Current user fetched successfully"));
+    .json(new ApiResponse(200, withAccessFlags(req.user), "Current user fetched successfully"));
 });
 
 /**
