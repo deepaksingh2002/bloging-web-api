@@ -4,6 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
+import { Subscription } from "../models/subscription.model.js";
 import {
   getAccessTokenCookieOptions,
   getBaseCookieOptions,
@@ -364,6 +365,51 @@ const getSessionDebug = asyncHandler(async (req, res) => {
   );
 });
 
+/**
+ * Return author/admin accounts for discovery with follow metadata.
+ */
+const getAuthorsList = asyncHandler(async (req, res) => {
+  const currentUserId = req.user?._id;
+
+  const authors = await User.find({
+    role: { $in: ["author", "admin", "superadmin"] },
+  })
+    .select("_id username fullName bio avatar role authorApplication.status")
+    .sort({ fullName: 1, username: 1 })
+    .lean();
+
+  if (!authors.length) {
+    return res.status(200).json(new ApiResponse(200, [], "Authors fetched successfully"));
+  }
+
+  const authorIds = authors.map((author) => author._id);
+
+  const [followerAgg, myFollowing] = await Promise.all([
+    Subscription.aggregate([
+      { $match: { channel: { $in: authorIds } } },
+      { $group: { _id: "$channel", count: { $sum: 1 } } },
+    ]),
+    Subscription.find({ subscriber: currentUserId, channel: { $in: authorIds } })
+      .select("channel")
+      .lean(),
+  ]);
+
+  const followersByAuthorId = new Map(
+    followerAgg.map((entry) => [String(entry._id), Number(entry.count) || 0])
+  );
+  const followingAuthorIds = new Set((myFollowing || []).map((entry) => String(entry.channel)));
+
+  const payload = authors.map((author) => ({
+    ...author,
+    followerCount: followersByAuthorId.get(String(author._id)) || 0,
+    isFollowing: followingAuthorIds.has(String(author._id)),
+  }));
+
+  return res.status(200).json(
+    new ApiResponse(200, payload, "Authors fetched successfully")
+  );
+});
+
 export {
   registerUser,
   logInUser,
@@ -372,4 +418,5 @@ export {
   applyForAuthor,
   refreshAccessToken,
   getSessionDebug,
+  getAuthorsList,
 };

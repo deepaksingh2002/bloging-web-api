@@ -10,6 +10,7 @@ import {
   applyForAuthor,
   refreshAccessToken,
   getSessionDebug,
+  getAuthorsList,
 } from "../controllers/user.controllers.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import {
@@ -28,6 +29,7 @@ router.route("/logout").post(logOutUser);
 router.route("/currentUser").get(verifyJWT, getCurrentUser);
 router.route("/apply-author").post(verifyJWT, validateAuthorApplicationPayload, applyForAuthor);
 router.route("/refresh-token").post(refreshAccessToken);
+router.route("/authors").get(verifyJWT, getAuthorsList);
 
 // Non-production auth diagnostics.
 router.route("/session").get(getSessionDebug);
