@@ -376,13 +376,13 @@ const getSessionDebug = asyncHandler(async (req, res) => {
 });
 
 /**
- * Return author/admin accounts for discovery with follow metadata.
+ * Return author accounts for discovery with follow metadata.
  */
 const getAuthorsList = asyncHandler(async (req, res) => {
   const currentUserId = req.user?._id;
 
   const authors = await User.find({
-    role: { $in: ["author", "admin", "superadmin"] },
+    role: "author",
   })
     .select("_id username fullName bio avatar role authorApplication.status")
     .sort({ fullName: 1, username: 1 })
