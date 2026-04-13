@@ -9,9 +9,9 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Subscription } from "../models/subscription.model.js";
 
-/**
- * Toggle subscription for current user against a channel user.
- */
+
+ // Toggle subscription for current user against a channel user.
+
 const toggleSubscription = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
   const subscriberId = req.user._id;
@@ -46,9 +46,9 @@ const toggleSubscription = asyncHandler(async (req, res) => {
   );
 });
 
-/**
- * Fetch all subscribers for a channel.
- */
+
+ //Fetch all subscribers for a channel.
+
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
 
@@ -66,9 +66,9 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   );
 });
 
-/**
- * Fetch all channels subscribed by a user.
- */
+
+ // Fetch all channels subscribed by a user.
+
 const getSubscribedChannels = asyncHandler(async (req, res) => {
   const { subscriberId } = req.params;
 

@@ -14,6 +14,16 @@ import {
 import { ApiResponse } from "../utils/ApiResponse.js";
 import fs from "fs";
 import mongoose from "mongoose";
+import { isAdminRole } from "../middlewares/owner.middleware.js";
+
+const ensureOwnerOrAdmin = (ownerId, user) => {
+  const isOwner = String(ownerId) === String(user?._id);
+  if (isOwner || isAdminRole(user?.role)) {
+    return;
+  }
+
+  throw new ApiError(403, "You are not allowed to modify this post");
+};
 
 /**
  * Create a new post with thumbnail upload.
@@ -153,10 +163,18 @@ const getPostById = asyncHandler(async (req, res) => {
 const deletePost = asyncHandler(async (req, res) => {
   const { postId } = req.params;
 
-  const post = await Post.findByIdAndDelete(postId);
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    throw new ApiError(400, "Invalid Post ID");
+  }
+
+  const post = await Post.findById(postId);
   if (!post) {
     throw new ApiError(404, "Post not found");
   }
+
+  ensureOwnerOrAdmin(post.owner, req.user);
+
+  await Post.findByIdAndDelete(postId);
 
   return res.status(200).json(
     new ApiResponse(200, null, "Post deleted successfully")
@@ -170,10 +188,16 @@ const updatePost = asyncHandler(async (req, res) => {
   const { title, content, catagry } = req.body;
   const { postId } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    throw new ApiError(400, "Invalid Post ID");
+  }
+
   const existingPost = await Post.findById(postId);
   if (!existingPost) {
     throw new ApiError(404, "Post not found");
   }
+
+  ensureOwnerOrAdmin(existingPost.owner, req.user);
 
   let thumbnailUrl = existingPost.thumbnail;
 

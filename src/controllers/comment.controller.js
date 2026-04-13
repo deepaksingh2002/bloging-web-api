@@ -10,6 +10,16 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Comment } from "../models/comment.model.js";
 import { Post } from "../models/post.model.js";
 import { Like } from "../models/likes.model.js";
+import { isAdminRole } from "../middlewares/owner.middleware.js";
+
+const ensureCommentOwnerOrAdmin = (commentOwner, user) => {
+  const isOwner = String(commentOwner) === String(user?._id);
+  if (isOwner || isAdminRole(user?.role)) {
+    return;
+  }
+
+  throw new ApiError(403, "You are not allowed to modify this comment");
+};
 
 /**
  * Create a comment for a post.
@@ -98,9 +108,7 @@ const updateComment = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Comment not found");
   }
 
-  if (String(comment.owner) !== String(req.user._id)) {
-    throw new ApiError(403, "You are not allowed to update this comment");
-  }
+  ensureCommentOwnerOrAdmin(comment.owner, req.user);
 
   comment.content = content.trim();
   await comment.save();
@@ -129,9 +137,7 @@ const deleteComment = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Comment not found");
   }
 
-  if (String(comment.owner) !== String(req.user._id)) {
-    throw new ApiError(403, "You are not allowed to delete this comment");
-  }
+  ensureCommentOwnerOrAdmin(comment.owner, req.user);
 
   await Comment.findByIdAndDelete(commentId);
   await Like.deleteMany({ comment: commentId });

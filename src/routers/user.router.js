@@ -10,6 +10,7 @@ import {
   logInUser,
   logOutUser,
   getCurrentUser,
+  applyForAuthor,
   refreshAccessToken,
   getSessionDebug,
 } from "../controllers/user.controllers.js";
@@ -22,6 +23,7 @@ router.post("/register", upload.single("avatar"), registerUser);
 router.route("/login").post(logInUser);
 router.route("/logout").post(logOutUser);
 router.route("/currentUser").get(verifyJWT, getCurrentUser);
+router.route("/apply-author").post(verifyJWT, applyForAuthor);
 router.route("/refresh-token").post(refreshAccessToken);
 
 // Non-production auth diagnostics.

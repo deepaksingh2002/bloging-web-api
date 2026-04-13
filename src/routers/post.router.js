@@ -14,19 +14,26 @@ import {
   updatePost,
 } from "../controllers/post.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyRoleAccess } from "../middlewares/owner.middleware.js";
 
 const router = Router();
 
-router.route("/create-post").post(verifyJWT, upload.single("thumbnail"), createPost);
+router
+  .route("/create-post")
+  .post(verifyJWT, verifyRoleAccess(["author", "admin", "superadmin"]), upload.single("thumbnail"), createPost);
 
 router.route("/getAll-post").get(getPosts);
 router.route("/search-post").get(searchPosts);
 
 router.route("/get-post/:postId").get(getPostById);
 
-router.route("/delete-post/:postId").delete(verifyJWT, deletePost);
+router
+  .route("/delete-post/:postId")
+  .delete(verifyJWT, verifyRoleAccess(["author", "admin", "superadmin"]), deletePost);
 
-router.route("/update-post/:postId").put(verifyJWT, upload.single("thumbnail"), updatePost);
+router
+  .route("/update-post/:postId")
+  .put(verifyJWT, verifyRoleAccess(["author", "admin", "superadmin"]), upload.single("thumbnail"), updatePost);
 
 export default router;
 

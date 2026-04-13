@@ -194,6 +194,36 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Promote authenticated user to author role.
+ */
+const applyForAuthor = asyncHandler(async (req, res) => {
+  if (!req.user?._id) {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const currentRole = String(user.role || "").toLowerCase();
+  if (["author", "admin", "superadmin"].includes(currentRole)) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, { user: req.user }, "User already has author access"));
+  }
+
+  user.role = "author";
+  await user.save({ validateBeforeSave: false });
+
+  const updatedUser = await User.findById(user._id).select("-password -refreshToken");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { user: updatedUser }, "Author role granted successfully"));
+});
+
+/**
  * Validate refresh token and rotate access/refresh tokens.
  */
 const refreshAccessToken = asyncHandler(async (req, res) => {
@@ -300,6 +330,7 @@ export {
   logInUser,
   logOutUser,
   getCurrentUser,
+  applyForAuthor,
   refreshAccessToken,
   getSessionDebug,
 };

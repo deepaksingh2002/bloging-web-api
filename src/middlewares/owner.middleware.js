@@ -4,6 +4,13 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 const normalize = (value) => String(value || "").trim().toLowerCase();
 
+const hasAnyRole = (userRole, allowedRoles = []) => {
+  const normalizedUserRole = normalize(userRole);
+  if (!normalizedUserRole) return false;
+
+  return allowedRoles.some((role) => normalize(role) === normalizedUserRole);
+};
+
 const hasDeveloperMatch = (req) => {
   const ownerEmail = normalize(process.env.OWNER_EMAIL);
   const ownerUserId = String(process.env.OWNER_USER_ID || "").trim();
@@ -23,7 +30,7 @@ export const verifyOwnerAccess = asyncHandler(async (req, _res, next) => {
   }
 
   const userRole = req.user?.role;
-  const isAdmin = typeof userRole === "string" && userRole.toLowerCase() === "admin";
+  const isAdmin = hasAnyRole(userRole, ["admin", "superadmin"]);
   if (isAdmin) {
     return next();
   }
@@ -46,3 +53,22 @@ export const verifyDeveloperAccess = asyncHandler(async (req, _res, next) => {
 
   throw new ApiError(403, "Only developer can perform this action");
 });
+
+export const verifyRoleAccess = (allowedRoles = []) =>
+  asyncHandler(async (req, _res, next) => {
+    if (!req.user?._id) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    if (!allowedRoles.length) {
+      return next();
+    }
+
+    if (hasAnyRole(req.user?.role, allowedRoles)) {
+      return next();
+    }
+
+    throw new ApiError(403, "You do not have permission to access this resource");
+  });
+
+export const isAdminRole = (role) => hasAnyRole(role, ["admin", "superadmin"]);
