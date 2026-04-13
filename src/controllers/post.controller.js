@@ -11,16 +11,6 @@ import {
 import { ApiResponse } from "../utils/ApiResponse.js";
 import fs from "fs";
 import mongoose from "mongoose";
-import { isAdminRole } from "../middlewares/owner.middleware.js";
-
-const ensureOwnerOrAdmin = (ownerId, user) => {
-  const isOwner = String(ownerId) === String(user?._id);
-  if (isOwner || isAdminRole(user?.role)) {
-    return;
-  }
-
-  throw new ApiError(403, "You are not allowed to modify this post");
-};
 
 const ensurePostOwnership = (post, userId) => {
   if (String(post.owner) !== String(userId)) {
@@ -170,22 +160,14 @@ const deletePost = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid Post ID");
   }
 
-<<<<<<< HEAD
-  const post = await Post.findById(postId);
-=======
   const post = await Post.findById(postId).select("_id owner");
->>>>>>> 00dbadf2e6bf08ff9c8f137c95c1861007a2c99e
   if (!post) {
     throw new ApiError(404, "Post not found");
   }
 
-<<<<<<< HEAD
-  ensureOwnerOrAdmin(post.owner, req.user);
-
-=======
   ensurePostOwnership(post, req.user?._id);
 
-  const commentIds = await Comment.find({ post: postId }).distinct("_id");
+  const commentIds = await Comment.distinct("_id", { post: postId });
 
   if (commentIds.length) {
     await Like.deleteMany({ comment: { $in: commentIds } });
@@ -193,7 +175,6 @@ const deletePost = asyncHandler(async (req, res) => {
   }
 
   await Like.deleteMany({ post: postId });
->>>>>>> 00dbadf2e6bf08ff9c8f137c95c1861007a2c99e
   await Post.findByIdAndDelete(postId);
 
   return res.status(200).json(
@@ -217,11 +198,7 @@ const updatePost = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Post not found");
   }
 
-<<<<<<< HEAD
-  ensureOwnerOrAdmin(existingPost.owner, req.user);
-=======
   ensurePostOwnership(existingPost, req.user?._id);
->>>>>>> 00dbadf2e6bf08ff9c8f137c95c1861007a2c99e
 
   let thumbnailUrl = existingPost.thumbnail;
 

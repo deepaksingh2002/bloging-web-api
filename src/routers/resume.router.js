@@ -31,34 +31,10 @@ const resumeUpload = multer({
 
 const router = Router();
 
-<<<<<<< HEAD:src/routers/about.router.js
-router.post(
-  "/resume",
-=======
 const resumeProtectedMiddlewares = [
->>>>>>> 00dbadf2e6bf08ff9c8f137c95c1861007a2c99e:src/routers/resume.router.js
   verifyJWT,
   requireAdmin,
   resumeUpload.single("resume"),
-<<<<<<< HEAD:src/routers/about.router.js
-  uploadResume
-);
-router.put(
-  "/resume",
-  verifyJWT,
-  verifyDeveloperAccess,
-  resumeUpload.single("resume"),
-  uploadResume
-);
-router.delete(
-  "/resume",
-  verifyJWT,
-  verifyDeveloperAccess,
-  deleteResumeFile
-);
-router.get("/resume/preview", aboutPublicLimiter, previewResume);
-router.get("/resume/download", aboutPublicLimiter, downloadResume);
-=======
 ];
 
 // Canonical resume routes.
@@ -67,6 +43,5 @@ router.put("/resume", ...resumeProtectedMiddlewares, createResumeHandler);
 router.delete("/resume", verifyJWT, requireAdmin, deleteResumeFile);
 router.get("/resume/preview", resumePublicLimiter, previewResume);
 router.get("/resume/download", resumePublicLimiter, downloadResume);
->>>>>>> 00dbadf2e6bf08ff9c8f137c95c1861007a2c99e:src/routers/resume.router.js
 
 export default router;

@@ -4,7 +4,6 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 const normalize = (value) => String(value || "").trim().toLowerCase();
 
-<<<<<<< HEAD
 const hasAnyRole = (userRole, allowedRoles = []) => {
   const normalizedUserRole = normalize(userRole);
   if (!normalizedUserRole) return false;
@@ -12,10 +11,8 @@ const hasAnyRole = (userRole, allowedRoles = []) => {
   return allowedRoles.some((role) => normalize(role) === normalizedUserRole);
 };
 
-const hasDeveloperMatch = (req) => {
-=======
 export const matchesOwnerIdentity = (req) => {
->>>>>>> 00dbadf2e6bf08ff9c8f137c95c1861007a2c99e
+const hasDeveloperMatch = (req) => {
   const ownerEmail = normalize(process.env.OWNER_EMAIL);
   const ownerUserId = String(process.env.OWNER_USER_ID || "").trim();
 

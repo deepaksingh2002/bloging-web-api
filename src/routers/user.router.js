@@ -26,7 +26,6 @@ router.post("/register", upload.single("avatar"), validateRegisterPayload, regis
 router.route("/login").post(validateLoginPayload, logInUser);
 router.route("/logout").post(logOutUser);
 router.route("/currentUser").get(verifyJWT, getCurrentUser);
-router.route("/apply-author").post(verifyJWT, applyForAuthor);
 router.route("/apply-author").post(verifyJWT, validateAuthorApplicationPayload, applyForAuthor);
 router.route("/refresh-token").post(refreshAccessToken);
 

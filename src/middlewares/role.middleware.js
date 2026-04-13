@@ -24,7 +24,7 @@ const requireRoles = (...allowedRoles) => {
 
 const hasAdminAccess = (req) => {
   const userRole = String(req.user?.role || "").trim().toLowerCase();
-  return userRole === "admin" || matchesOwnerIdentity(req);
+  return userRole === "admin" || userRole === "superadmin" || matchesOwnerIdentity(req);
 };
 
 const requireAdmin = asyncHandler(async (req, _res, next) => {

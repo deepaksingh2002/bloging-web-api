@@ -191,16 +191,6 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 /**
-<<<<<<< HEAD
- * Promote authenticated user to author role.
- */
-const applyForAuthor = asyncHandler(async (req, res) => {
-  if (!req.user?._id) {
-    throw new ApiError(401, "Unauthorized request");
-  }
-
-  const user = await User.findById(req.user._id);
-=======
  * Submit author application form for the logged-in user.
  */
 const applyForAuthor = asyncHandler(async (req, res) => {
@@ -211,33 +201,15 @@ const applyForAuthor = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findById(req.user?._id);
->>>>>>> 00dbadf2e6bf08ff9c8f137c95c1861007a2c99e
   if (!user) {
     throw new ApiError(404, "User not found");
   }
 
-<<<<<<< HEAD
-  const currentRole = String(user.role || "").toLowerCase();
-  if (["author", "admin", "superadmin"].includes(currentRole)) {
-    return res
-      .status(200)
-      .json(new ApiResponse(200, { user: req.user }, "User already has author access"));
-  }
-
-  user.role = "author";
-  await user.save({ validateBeforeSave: false });
-
-  const updatedUser = await User.findById(user._id).select("-password -refreshToken");
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, { user: updatedUser }, "Author role granted successfully"));
-=======
   if (user.role === "author") {
     throw new ApiError(400, "You are already an author");
   }
 
-  if (user.role === "admin") {
+  if (user.role === "admin" || user.role === "superadmin") {
     throw new ApiError(400, "Admin account cannot apply for author role");
   }
 
@@ -266,7 +238,6 @@ const applyForAuthor = asyncHandler(async (req, res) => {
       "Author application submitted successfully"
     )
   );
->>>>>>> 00dbadf2e6bf08ff9c8f137c95c1861007a2c99e
 });
 
 /**
