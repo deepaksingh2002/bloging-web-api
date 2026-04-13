@@ -26,11 +26,8 @@ router.post("/register", upload.single("avatar"), validateRegisterPayload, regis
 router.route("/login").post(validateLoginPayload, logInUser);
 router.route("/logout").post(logOutUser);
 router.route("/currentUser").get(verifyJWT, getCurrentUser);
-<<<<<<< HEAD
 router.route("/apply-author").post(verifyJWT, applyForAuthor);
-=======
 router.route("/apply-author").post(verifyJWT, validateAuthorApplicationPayload, applyForAuthor);
->>>>>>> 00dbadf2e6bf08ff9c8f137c95c1861007a2c99e
 router.route("/refresh-token").post(refreshAccessToken);
 
 // Non-production auth diagnostics.
