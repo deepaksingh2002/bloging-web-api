@@ -204,6 +204,8 @@ curl -L -X GET http://localhost:8000/api/v1/about/resume/download
 - `Authorization: Bearer <token>` header
 - `accessToken` cookie
 - Login/refresh endpoints also set `accessToken` and `refreshToken` in HTTP-only cookies.
+- Login/refresh responses also include `accessToken` and `refreshToken` in the JSON body so clients can fall back when a browser blocks cross-site cookies.
+- `POST /refresh-token` and `POST /logout` accept `refreshToken` in the request body as a fallback.
 
 ## Response Pattern
 

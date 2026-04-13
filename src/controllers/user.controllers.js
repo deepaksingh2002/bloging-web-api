@@ -155,7 +155,17 @@ const logInUser = asyncHandler(async (req, res) => {
     .status(200)
     .cookie("accessToken", accessToken, accessCookieOptions)
     .cookie("refreshToken", refreshToken, refreshCookieOptions)
-    .json(new ApiResponse(200, { user: withAccessFlags(loggedInUser) }, "Logged in successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        {
+          user: withAccessFlags(loggedInUser),
+          accessToken,
+          refreshToken,
+        },
+        "Logged in successfully"
+      )
+    );
 });
 
 /**
