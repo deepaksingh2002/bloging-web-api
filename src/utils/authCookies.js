@@ -31,6 +31,7 @@ const getBaseCookieOptions = (req) => {
         .trim()
         .toLowerCase();
   const isHttps = req.secure || forwardedProto === "https";
+  const originUsesHttps = origin.toLowerCase().startsWith("https://");
   let originHost = "";
 
   try {
@@ -41,7 +42,9 @@ const getBaseCookieOptions = (req) => {
 
   const isCrossSite = Boolean(originHost && requestHost && originHost !== requestHost);
   const forceCrossSiteCookies = process.env.NODE_ENV === "production" || isCrossSite;
-  const secure = forceCrossSiteCookies ? isHttps : false;
+  // In proxy/CDN deployments req.secure can be false even for HTTPS origins.
+  // Fall back to Origin protocol so cross-site cookies stay browser-compatible.
+  const secure = forceCrossSiteCookies ? (isHttps || originUsesHttps) : false;
 
   return {
     httpOnly: true,
