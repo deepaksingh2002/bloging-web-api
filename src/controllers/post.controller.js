@@ -12,11 +12,11 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import fs from "fs";
 import mongoose from "mongoose";
 
-const attachEngagementCounts = async (posts) => {
+const attachEngagementCounts = async (posts, userId = null) => {
   const ids = posts.map((post) => post?._id).filter(Boolean);
   if (!ids.length) return posts;
 
-  const [likeCounts, commentCounts] = await Promise.all([
+  const [likeCounts, commentCounts, likedByCurrentUser] = await Promise.all([
     Like.aggregate([
       { $match: { post: { $in: ids } } },
       { $group: { _id: "$post", count: { $sum: 1 } } },
@@ -25,15 +25,20 @@ const attachEngagementCounts = async (posts) => {
       { $match: { post: { $in: ids } } },
       { $group: { _id: "$post", count: { $sum: 1 } } },
     ]),
+    userId
+      ? Like.find({ post: { $in: ids }, user: userId }).select("post").lean()
+      : Promise.resolve([]),
   ]);
 
   const likesByPostId = new Map(likeCounts.map((entry) => [String(entry._id), entry.count]));
   const commentsByPostId = new Map(commentCounts.map((entry) => [String(entry._id), entry.count]));
+  const likedPostIds = new Set((likedByCurrentUser || []).map((entry) => String(entry.post)));
 
   return posts.map((post) => ({
     ...post,
     likesCount: likesByPostId.get(String(post._id)) || 0,
     commentsCount: commentsByPostId.get(String(post._id)) || 0,
+    isLiked: likedPostIds.has(String(post._id)),
   }));
 };
 
@@ -111,7 +116,7 @@ const getPosts = asyncHandler(async (req, res) => {
     throw new ApiError(404, "No posts found");
   }
 
-  const postsWithCounts = await attachEngagementCounts(posts);
+  const postsWithCounts = await attachEngagementCounts(posts, req.user?._id || null);
 
   return res.status(200).json(
     new ApiResponse(200, postsWithCounts, "Posts fetched successfully")
@@ -146,7 +151,7 @@ const searchPosts = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 })
     .lean();
 
-  const postsWithCounts = await attachEngagementCounts(posts);
+  const postsWithCounts = await attachEngagementCounts(posts, req.user?._id || null);
 
   return res.status(200).json(
     new ApiResponse(200, postsWithCounts, "Search results fetched successfully")
@@ -174,13 +179,10 @@ const getPostById = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Post not found");
   }
 
-  const [likesCount, commentsCount] = await Promise.all([
-    Like.countDocuments({ post: postId }),
-    Comment.countDocuments({ post: postId }),
-  ]);
+  const [postWithCounts] = await attachEngagementCounts([post], req.user?._id || null);
 
   return res.status(200).json(
-    new ApiResponse(200, { ...post, likesCount, commentsCount }, "Post fetched successfully")
+    new ApiResponse(200, postWithCounts, "Post fetched successfully")
   );
 });
 

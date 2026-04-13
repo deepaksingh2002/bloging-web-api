@@ -68,3 +68,48 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
   req.user = await User.findById(user._id).select("-password -refreshToken");
   return next();
 });
+
+export const verifyJWTOptional = asyncHandler(async (req, res, next) => {
+  const headerToken = req
+    .header("Authorization")
+    ?.replace(/^Bearer\s+/i, "")
+    ?.trim();
+  const accessToken = req.cookies?.accessToken || headerToken;
+
+  if (accessToken) {
+    try {
+      const decodedToken = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+      const user = await User.findById(decodedToken?._id).select("-password -refreshToken");
+
+      if (user) {
+        req.user = user;
+        return next();
+      }
+    } catch {
+      // Silent fail for optional auth.
+    }
+  }
+
+  const refreshToken = req.cookies?.refreshToken;
+  if (!refreshToken) {
+    return next();
+  }
+
+  try {
+    const decodedRefreshToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    const user = await User.findById(decodedRefreshToken?._id);
+
+    if (!user || user.refreshToken !== refreshToken) {
+      return next();
+    }
+
+    const newAccessToken = user.generateAccessToken();
+    res.cookie("accessToken", newAccessToken, getAccessTokenCookieOptions(req));
+
+    req.user = await User.findById(user._id).select("-password -refreshToken");
+  } catch {
+    // Silent fail for optional auth.
+  }
+
+  return next();
+});
