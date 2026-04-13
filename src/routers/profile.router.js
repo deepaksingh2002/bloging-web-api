@@ -1,7 +1,4 @@
-/**
- * File: D:\Fs\Blog\backend\src\routers\profile.router.js
- * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
- */
+
 
 import { Router } from "express";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -13,6 +10,7 @@ import {
 } from "../controllers/profile.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { requireRoles } from "../middlewares/role.middleware.js";
+import { matchesOwnerIdentity } from "../middlewares/owner.middleware.js";
 import { ApiError } from "../utils/ApiError.js";
 
 const router = Router();
@@ -24,7 +22,7 @@ const requireNormalUserProfileAccess = (req, _res, next) => {
     throw new ApiError(403, "Use /api/v1/author/profile for author profile access");
   }
 
-  if (role === "admin") {
+  if (role === "admin" || matchesOwnerIdentity(req)) {
     throw new ApiError(403, "Use /api/v1/admin/profile for admin profile access");
   }
 

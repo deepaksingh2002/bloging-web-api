@@ -4,7 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 const normalize = (value) => String(value || "").trim().toLowerCase();
 
-const hasDeveloperMatch = (req) => {
+export const matchesOwnerIdentity = (req) => {
   const ownerEmail = normalize(process.env.OWNER_EMAIL);
   const ownerUserId = String(process.env.OWNER_USER_ID || "").trim();
 
@@ -28,7 +28,7 @@ export const verifyOwnerAccess = asyncHandler(async (req, _res, next) => {
     return next();
   }
 
-  if (hasDeveloperMatch(req)) {
+  if (matchesOwnerIdentity(req)) {
     return next();
   }
 
@@ -40,7 +40,7 @@ export const verifyDeveloperAccess = asyncHandler(async (req, _res, next) => {
     throw new ApiError(401, "Unauthorized");
   }
 
-  if (hasDeveloperMatch(req)) {
+  if (matchesOwnerIdentity(req)) {
     return next();
   }
 

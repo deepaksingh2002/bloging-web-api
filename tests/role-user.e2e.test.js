@@ -73,6 +73,24 @@ test("visitor and normal user access rules are enforced", async () => {
     .set("Authorization", `Bearer ${tokens.commenter}`);
   assert.equal(adminDashboardDeniedResponse.status, 403);
 
+  const previousOwnerUserId = process.env.OWNER_USER_ID;
+  process.env.OWNER_USER_ID = commenterUser._id.toString();
+
+  try {
+    const ownerAdminDashboardResponse = await request(app)
+      .get("/api/v1/admin/dashboard")
+      .set("Authorization", `Bearer ${tokens.commenter}`);
+    assert.equal(ownerAdminDashboardResponse.status, 200);
+
+    const ownerProfileResponse = await request(app)
+      .get("/api/v1/users/profile")
+      .set("Authorization", `Bearer ${tokens.commenter}`);
+    assert.equal(ownerProfileResponse.status, 403);
+    assert.match(ownerProfileResponse.body.message, /admin profile access/i);
+  } finally {
+    process.env.OWNER_USER_ID = previousOwnerUserId;
+  }
+
   const approveResponse = await request(app)
     .patch(`/api/v1/admin/author-applications/${applicantUser._id}/approve`)
     .set("Authorization", `Bearer ${tokens.admin}`);

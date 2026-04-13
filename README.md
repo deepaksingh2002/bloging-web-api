@@ -126,7 +126,7 @@ Server starts on `http://localhost:<PORT>` and mounts APIs under `/api/v1`.
 - `PATCH /comments/:commentId/like` (also accepts `POST`)
 - `GET /liked-posts`
 
-### Admin Routes (`/api/v1/admin`) - admin role required for all
+### Admin Routes (`/api/v1/admin`) - admin role required, or the configured owner identity via `OWNER_USER_ID`/`OWNER_EMAIL`
 
 - `GET /dashboard` (admin dashboard metrics via aggregation pipeline)
   - Optional query params: `from` (ISO date), `to` (ISO date), `recentLimit` (1-50), `pendingLimit` (1-50)
@@ -149,7 +149,7 @@ Server starts on `http://localhost:<PORT>` and mounts APIs under `/api/v1`.
 - Visitor (not logged in): can read posts.
 - Logged-in user: can comment and like posts; can submit author application.
 - Author: can create, update, delete, and monitor own posts from author dashboard/profile.
-- Admin: has full moderation control, including deleting any post/comment, reviewing author applications, and using admin dashboard/profile.
+- Admin: has full moderation control, including deleting any post/comment, reviewing author applications, and using admin dashboard/profile. The admin guard also accepts the configured owner identity via `OWNER_USER_ID` or `OWNER_EMAIL`.
 
 ### Subscription Routes (`/api/v1/subscriptions`) - auth required for all
 
