@@ -17,6 +17,7 @@ import {
   validateLoginPayload,
   validateRegisterPayload,
 } from "../middlewares/requestValidation.middleware.js";
+import profileRouter from "./profile.router.js";
 
 const router = Router();
 
@@ -30,6 +31,9 @@ router.route("/refresh-token").post(refreshAccessToken);
 
 // Non-production auth diagnostics.
 router.route("/session").get(getSessionDebug);
+
+// User profile routes under the same /users namespace.
+router.use(profileRouter);
 
 export default router;
 
