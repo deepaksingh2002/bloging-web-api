@@ -44,7 +44,7 @@ import adminRouter from "./routers/admin.router.js";
 import authorRouter from "./routers/author.router.js";
 
 app.use("/api/v1/users", userRouter);
-app.use("/api/v1/users", profileRouter);
+app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/post", postRouter);
 app.use("/api/v1/likes", likeRouter);
 app.use("/api/v1/subscriptions", subscriptionRouter);
