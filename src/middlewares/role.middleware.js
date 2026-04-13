@@ -22,13 +22,17 @@ const requireRoles = (...allowedRoles) => {
   });
 };
 
+const hasAdminAccess = (req) => {
+  const userRole = String(req.user?.role || "").trim().toLowerCase();
+  return userRole === "admin" || matchesOwnerIdentity(req);
+};
+
 const requireAdmin = asyncHandler(async (req, _res, next) => {
   if (!req.user?._id) {
     throw new ApiError(401, "Unauthorized");
   }
 
-  const userRole = String(req.user?.role || "").trim().toLowerCase();
-  if (userRole === "admin" || matchesOwnerIdentity(req)) {
+  if (hasAdminAccess(req)) {
     return next();
   }
 
@@ -37,4 +41,4 @@ const requireAdmin = asyncHandler(async (req, _res, next) => {
 
 const requireAuthor = requireRoles("author");
 
-export { requireRoles, requireAdmin, requireAuthor };
+export { requireRoles, requireAdmin, requireAuthor, hasAdminAccess };
