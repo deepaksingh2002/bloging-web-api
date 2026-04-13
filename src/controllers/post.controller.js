@@ -12,6 +12,31 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import fs from "fs";
 import mongoose from "mongoose";
 
+const attachEngagementCounts = async (posts) => {
+  const ids = posts.map((post) => post?._id).filter(Boolean);
+  if (!ids.length) return posts;
+
+  const [likeCounts, commentCounts] = await Promise.all([
+    Like.aggregate([
+      { $match: { post: { $in: ids } } },
+      { $group: { _id: "$post", count: { $sum: 1 } } },
+    ]),
+    Comment.aggregate([
+      { $match: { post: { $in: ids } } },
+      { $group: { _id: "$post", count: { $sum: 1 } } },
+    ]),
+  ]);
+
+  const likesByPostId = new Map(likeCounts.map((entry) => [String(entry._id), entry.count]));
+  const commentsByPostId = new Map(commentCounts.map((entry) => [String(entry._id), entry.count]));
+
+  return posts.map((post) => ({
+    ...post,
+    likesCount: likesByPostId.get(String(post._id)) || 0,
+    commentsCount: commentsByPostId.get(String(post._id)) || 0,
+  }));
+};
+
 const ensurePostOwnership = (post, userId) => {
   if (String(post.owner) !== String(userId)) {
     throw new ApiError(403, "You are not allowed to modify this post");
@@ -86,8 +111,10 @@ const getPosts = asyncHandler(async (req, res) => {
     throw new ApiError(404, "No posts found");
   }
 
+  const postsWithCounts = await attachEngagementCounts(posts);
+
   return res.status(200).json(
-    new ApiResponse(200, posts, "Posts fetched successfully")
+    new ApiResponse(200, postsWithCounts, "Posts fetched successfully")
   );
 });
 
@@ -119,8 +146,10 @@ const searchPosts = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 })
     .lean();
 
+  const postsWithCounts = await attachEngagementCounts(posts);
+
   return res.status(200).json(
-    new ApiResponse(200, posts, "Search results fetched successfully")
+    new ApiResponse(200, postsWithCounts, "Search results fetched successfully")
   );
 });
 
@@ -145,8 +174,13 @@ const getPostById = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Post not found");
   }
 
+  const [likesCount, commentsCount] = await Promise.all([
+    Like.countDocuments({ post: postId }),
+    Comment.countDocuments({ post: postId }),
+  ]);
+
   return res.status(200).json(
-    new ApiResponse(200, post, "Post fetched successfully")
+    new ApiResponse(200, { ...post, likesCount, commentsCount }, "Post fetched successfully")
   );
 });
 
