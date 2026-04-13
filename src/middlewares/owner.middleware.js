@@ -12,7 +12,6 @@ const hasAnyRole = (userRole, allowedRoles = []) => {
 };
 
 export const matchesOwnerIdentity = (req) => {
-const hasDeveloperMatch = (req) => {
   const ownerEmail = normalize(process.env.OWNER_EMAIL);
   const ownerUserId = String(process.env.OWNER_USER_ID || "").trim();
 

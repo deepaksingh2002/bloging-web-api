@@ -1,7 +1,3 @@
-/**
- * File: D:\Fs\Blog\backend\src\config\db.js
- * Purpose: Backend module for the blog API (routes, controllers, models, middleware, or utilities).
- */
 
 import mongoose from "mongoose";
 import { DB_NAME } from "../../constants.js";
