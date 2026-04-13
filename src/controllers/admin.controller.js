@@ -34,6 +34,17 @@ const parseLimit = (rawValue, fallback, label) => {
   return parsed;
 };
 
+const parsePage = (rawValue, fallback = 1) => {
+  if (rawValue === undefined) return fallback;
+
+  const parsed = Number(rawValue);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new ApiError(400, "page must be a positive integer");
+  }
+
+  return parsed;
+};
+
 const buildDateRangeMatch = (fromDate, toDate, field = "createdAt") => {
   if (!fromDate && !toDate) {
     return null;
@@ -96,6 +107,183 @@ const getPendingAuthorApplications = asyncHandler(async (_req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, users, "Pending author applications fetched successfully"));
+});
+
+const getAdminUsers = asyncHandler(async (req, res) => {
+  const page = parsePage(req.query?.page, 1);
+  const limit = parseLimit(req.query?.limit, 12, "limit");
+  const skip = (page - 1) * limit;
+  const searchQuery = String(req.query?.q || "").trim();
+  const roleFilter = String(req.query?.role || "").trim().toLowerCase();
+  const sortBy = String(req.query?.sortBy || "createdAt").trim().toLowerCase();
+  const sortOrder = String(req.query?.sortOrder || "desc").trim().toLowerCase();
+
+  const query = {};
+  const sortFieldMap = {
+    createdat: "createdAt",
+    fullname: "fullName",
+    username: "username",
+    email: "email",
+  };
+  const normalizedSortBy = sortFieldMap[sortBy] || "createdAt";
+  const normalizedSortOrder = sortOrder === "asc" ? 1 : -1;
+  const sortConfig = { [normalizedSortBy]: normalizedSortOrder };
+
+  if (searchQuery) {
+    query.$or = [
+      { fullName: { $regex: searchQuery, $options: "i" } },
+      { username: { $regex: searchQuery, $options: "i" } },
+      { email: { $regex: searchQuery, $options: "i" } },
+    ];
+  }
+
+  if (["user", "author", "admin", "superadmin"].includes(roleFilter)) {
+    query.role = roleFilter;
+  }
+
+  const [users, total] = await Promise.all([
+    User.find(query)
+    .select("_id fullName username email avatar bio role authorApplication.status createdAt updatedAt")
+    .skip(skip)
+    .limit(limit)
+    .sort(sortConfig)
+    .lean(),
+    User.countDocuments(query),
+  ]);
+
+  if (!users.length) {
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          users: [],
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.max(Math.ceil(total / limit), 1),
+            hasNextPage: false,
+            hasPreviousPage: page > 1,
+          },
+          filters: {
+            q: searchQuery,
+            role: roleFilter || null,
+            sortBy: normalizedSortBy,
+            sortOrder: normalizedSortOrder === 1 ? "asc" : "desc",
+          },
+        },
+        "Users fetched successfully"
+      )
+    );
+  }
+
+  const userIds = users.map((user) => user._id);
+
+  const [followerAgg, followingAgg, postAgg] = await Promise.all([
+    Subscription.aggregate([
+      { $match: { channel: { $in: userIds } } },
+      { $group: { _id: "$channel", count: { $sum: 1 } } },
+    ]),
+    Subscription.aggregate([
+      { $match: { subscriber: { $in: userIds } } },
+      { $group: { _id: "$subscriber", count: { $sum: 1 } } },
+    ]),
+    Post.aggregate([
+      { $match: { owner: { $in: userIds } } },
+      { $group: { _id: "$owner", count: { $sum: 1 } } },
+    ]),
+  ]);
+
+  const followersByUserId = new Map(
+    followerAgg.map((entry) => [String(entry._id), Number(entry.count) || 0])
+  );
+  const followingByUserId = new Map(
+    followingAgg.map((entry) => [String(entry._id), Number(entry.count) || 0])
+  );
+  const postsByUserId = new Map(
+    postAgg.map((entry) => [String(entry._id), Number(entry.count) || 0])
+  );
+
+  const payload = users.map((user) => ({
+    ...user,
+    followerCount: followersByUserId.get(String(user._id)) || 0,
+    followingCount: followingByUserId.get(String(user._id)) || 0,
+    postCount: postsByUserId.get(String(user._id)) || 0,
+  }));
+
+  const totalPages = Math.max(Math.ceil(total / limit), 1);
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        users: payload,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
+        filters: {
+          q: searchQuery,
+          role: roleFilter || null,
+          sortBy: normalizedSortBy,
+          sortOrder: normalizedSortOrder === 1 ? "asc" : "desc",
+        },
+      },
+      "Users fetched successfully"
+    )
+  );
+});
+
+const getAdminUserProfile = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new ApiError(400, "Invalid user id");
+  }
+
+  const user = await User.findById(userId)
+    .select("_id fullName username email avatar bio role authorApplication createdAt updatedAt")
+    .lean();
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const [postCount, followerCount, followingCount, commentCount, likeCount, recentPosts] =
+    await Promise.all([
+      Post.countDocuments({ owner: userId }),
+      Subscription.countDocuments({ channel: userId }),
+      Subscription.countDocuments({ subscriber: userId }),
+      Comment.countDocuments({ owner: userId }),
+      Like.countDocuments({ user: userId }),
+      Post.find({ owner: userId })
+        .select("_id title thumbnail catagry views isPublished createdAt")
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .lean(),
+    ]);
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        user: {
+          ...user,
+          postCount,
+          followerCount,
+          followingCount,
+          commentCount,
+          likeCount,
+        },
+        recentPosts,
+      },
+      "User profile fetched successfully"
+    )
+  );
 });
 
 const reviewAuthorApplication = asyncHandler(async (req, res) => {
@@ -532,6 +720,71 @@ const deleteAnyComment = asyncHandler(async (req, res) => {
   );
 });
 
+const deleteUserAccount = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new ApiError(400, "Invalid user id");
+  }
+
+  const requesterRole = String(req.user?.role || "").trim().toLowerCase();
+  if (!["admin", "superadmin"].includes(requesterRole)) {
+    throw new ApiError(403, "Only admin can delete users");
+  }
+
+  const targetUser = await User.findById(userId).select("_id fullName username email role");
+  if (!targetUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const targetRole = String(targetUser.role || "").trim().toLowerCase();
+  if (["admin", "superadmin"].includes(targetRole)) {
+    throw new ApiError(400, "Admin accounts cannot be deleted from the user list");
+  }
+
+  if (String(req.user?._id) === String(targetUser._id)) {
+    throw new ApiError(400, "You cannot delete your own account from here");
+  }
+
+  const ownedPostIds = await Post.find({ owner: userId }).distinct("_id");
+  const commentIdsOnOwnedPosts = ownedPostIds.length
+    ? await Comment.find({ post: { $in: ownedPostIds } }).distinct("_id")
+    : [];
+  const userCommentIds = await Comment.find({ owner: userId }).distinct("_id");
+
+  const commentIdsToDelete = [...new Set([...commentIdsOnOwnedPosts, ...userCommentIds].map(String))];
+
+  await Like.deleteMany({
+    $or: [
+      { user: userId },
+      ...(ownedPostIds.length ? [{ post: { $in: ownedPostIds } }] : []),
+      ...(commentIdsToDelete.length ? [{ comment: { $in: commentIdsToDelete } }] : []),
+    ],
+  });
+
+  await Comment.deleteMany({
+    $or: [
+      { owner: userId },
+      ...(ownedPostIds.length ? [{ post: { $in: ownedPostIds } }] : []),
+    ],
+  });
+
+  await Post.deleteMany({ owner: userId });
+  await Subscription.deleteMany({ $or: [{ subscriber: userId }, { channel: userId }] });
+  await User.findByIdAndDelete(userId);
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        deletedUserId: targetUser._id,
+        deletedUserName: targetUser.fullName || targetUser.username || "User",
+      },
+      "User deleted successfully"
+    )
+  );
+});
+
 const getModerationLogs = asyncHandler(async (req, res) => {
   const page = Math.max(Number(req.query?.page) || 1, 1);
   const limit = Math.min(Math.max(Number(req.query?.limit) || 20, 1), 100);
@@ -585,9 +838,12 @@ export {
   getPendingAuthorApplications,
   reviewAuthorApplication,
   approveAuthorApplication,
+  getAdminUsers,
+  getAdminUserProfile,
   getAdminDashboard,
   getAdminProfile,
   deleteAnyPost,
   deleteAnyComment,
+  deleteUserAccount,
   getModerationLogs,
 };

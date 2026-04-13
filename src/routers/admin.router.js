@@ -5,8 +5,11 @@ import {
   approveAuthorApplication,
   getAdminDashboard,
   getAdminProfile,
+  getAdminUsers,
+  getAdminUserProfile,
   deleteAnyPost,
   deleteAnyComment,
+  deleteUserAccount,
   getModerationLogs,
 } from "../controllers/admin.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -19,9 +22,12 @@ router.use(verifyJWT, requireAdmin);
 
 router.get("/dashboard", getAdminDashboard);
 router.get("/profile", getAdminProfile);
+router.get("/users", getAdminUsers);
+router.get("/users/:userId", getAdminUserProfile);
 router.get("/moderation-logs", getModerationLogs);
 router.delete("/posts/:postId", deleteAnyPost);
 router.delete("/comments/:commentId", deleteAnyComment);
+router.delete("/users/:userId", deleteUserAccount);
 router.get("/author-applications", getPendingAuthorApplications);
 router.patch("/author-applications/:userId/approve", approveAuthorApplication);
 router.patch("/author-applications/:userId", validateAuthorApplicationReviewPayload, reviewAuthorApplication);
