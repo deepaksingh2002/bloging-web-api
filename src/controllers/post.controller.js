@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Post } from "../models/post.model.js";
 import { Comment } from "../models/comment.model.js";
 import { Like } from "../models/likes.model.js";
+import { Report } from "../models/report.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import {
   uploadOnCloudinary,
@@ -274,4 +275,54 @@ const updatePost = asyncHandler(async (req, res) => {
   );
 });
 
-export { createPost, getPosts, searchPosts, getPostById, deletePost, updatePost };
+/**
+ * Report a post for moderation review.
+ */
+const reportPost = asyncHandler(async (req, res) => {
+  const { postId } = req.params;
+  const reason = String(req.body?.reason || "").trim();
+
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    throw new ApiError(400, "Invalid post id");
+  }
+
+  const post = await Post.findById(postId).select("_id");
+  if (!post) {
+    throw new ApiError(404, "Post not found");
+  }
+
+  const existingOpenReport = await Report.findOne({
+    reporter: req.user?._id,
+    targetType: "post",
+    targetId: post._id,
+    status: "open",
+  }).select("_id");
+
+  if (existingOpenReport) {
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        { reportId: existingOpenReport._id, targetType: "post", targetId: post._id },
+        "Post already reported"
+      )
+    );
+  }
+
+  const report = await Report.create({
+    reporter: req.user?._id,
+    targetType: "post",
+    targetId: post._id,
+    post: post._id,
+    reason,
+  });
+
+  return res.status(201).json(
+    new ApiResponse(
+      201,
+      { reportId: report._id, targetType: report.targetType, targetId: report.targetId },
+      "Post reported successfully"
+    )
+  );
+});
+
+export { createPost, getPosts, searchPosts, getPostById, deletePost, updatePost, reportPost };
