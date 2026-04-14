@@ -151,3 +151,45 @@ test("admin can update their own profile from the admin profile endpoint", async
   assert.equal(updatedAdmin.fullName, "Updated Admin User");
   assert.equal(updatedAdmin.bio, "Updated admin bio");
 });
+
+test("reported posts and comments are visible in admin reports list", async () => {
+  const { posts, tokens } = fixture;
+
+  const createdCommentResponse = await request(app)
+    .post(`/api/v1/comments/posts/${posts.alpha._id}/comments`)
+    .set("Authorization", `Bearer ${tokens.commenter}`)
+    .send({ content: "Please review this comment" });
+  assert.equal(createdCommentResponse.status, 201);
+  const commentId = createdCommentResponse.body.data._id;
+
+  const reportPostResponse = await request(app)
+    .post(`/api/v1/post/${posts.alpha._id}/report`)
+    .set("Authorization", `Bearer ${tokens.applicant}`)
+    .send({ reason: "Suspicious post" });
+  assert.equal(reportPostResponse.status, 201);
+
+  const reportCommentResponse = await request(app)
+    .post(`/api/v1/comments/${commentId}/report`)
+    .set("Authorization", `Bearer ${tokens.applicant}`)
+    .send({ reason: "Abusive comment" });
+  assert.equal(reportCommentResponse.status, 201);
+
+  const adminReportsResponse = await request(app)
+    .get("/api/v1/admin/reports")
+    .set("Authorization", `Bearer ${tokens.admin}`);
+  assert.equal(adminReportsResponse.status, 200);
+
+  const reportItems = adminReportsResponse.body.data;
+  assert.equal(Array.isArray(reportItems), true);
+  assert.equal(reportItems.length >= 2, true);
+
+  const hasPostReport = reportItems.some(
+    (item) => item.targetType === "post" && String(item.targetId) === String(posts.alpha._id)
+  );
+  const hasCommentReport = reportItems.some(
+    (item) => item.targetType === "comment" && String(item.targetId) === String(commentId)
+  );
+
+  assert.equal(hasPostReport, true);
+  assert.equal(hasCommentReport, true);
+});
