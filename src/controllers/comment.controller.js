@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Comment } from "../models/comment.model.js";
 import { Post } from "../models/post.model.js";
 import { Like } from "../models/likes.model.js";
+import { Report } from "../models/report.model.js";
 import { isAdminRole } from "../middlewares/owner.middleware.js";
 
 const ensureCommentOwnerOrAdmin = (commentOwner, user) => {
@@ -142,4 +143,54 @@ const deleteComment = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Comment deleted successfully"));
 });
 
-export { createComment, getPostComments, updateComment, deleteComment };
+/**
+ * Report a comment for moderation review.
+ */
+const reportComment = asyncHandler(async (req, res) => {
+  const { commentId } = req.params;
+  const reason = String(req.body?.reason || "").trim();
+
+  if (!mongoose.Types.ObjectId.isValid(commentId)) {
+    throw new ApiError(400, "Invalid comment id");
+  }
+
+  const comment = await Comment.findById(commentId).select("_id post");
+  if (!comment) {
+    throw new ApiError(404, "Comment not found");
+  }
+
+  const existingOpenReport = await Report.findOne({
+    reporter: req.user?._id,
+    targetType: "comment",
+    targetId: comment._id,
+    status: "open",
+  }).select("_id");
+
+  if (existingOpenReport) {
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        { reportId: existingOpenReport._id, targetType: "comment", targetId: comment._id },
+        "Comment already reported"
+      )
+    );
+  }
+
+  const report = await Report.create({
+    reporter: req.user?._id,
+    targetType: "comment",
+    targetId: comment._id,
+    post: comment.post || null,
+    reason,
+  });
+
+  return res.status(201).json(
+    new ApiResponse(
+      201,
+      { reportId: report._id, targetType: report.targetType, targetId: report.targetId },
+      "Comment reported successfully"
+    )
+  );
+});
+
+export { createComment, getPostComments, updateComment, deleteComment, reportComment };
