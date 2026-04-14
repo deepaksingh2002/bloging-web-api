@@ -12,6 +12,7 @@ import {
 import { Post } from "../src/models/post.model.js";
 import { Comment } from "../src/models/comment.model.js";
 import { Like } from "../src/models/likes.model.js";
+import { User } from "../src/models/user.model.js";
 
 let fixture;
 
@@ -117,4 +118,36 @@ test("admin can view dashboards and fully moderate posts/comments with audit log
     .set("Authorization", `Bearer ${tokens.admin}`);
   assert.equal(approveResponse.status, 200);
   assert.equal(approveResponse.body.data.role, "author");
+});
+
+test("owner admin access can delete a normal user from the admin user list", async () => {
+  const { commenterUser, tokens } = fixture;
+
+  const deleteUserResponse = await request(app)
+    .delete(`/api/v1/admin/users/${commenterUser._id}`)
+    .set("Authorization", `Bearer ${tokens.owner}`);
+
+  assert.equal(deleteUserResponse.status, 200);
+  assert.equal(deleteUserResponse.body.message, "User deleted successfully");
+
+  const deletedUserCheck = await User.findById(commenterUser._id);
+  assert.equal(deletedUserCheck, null);
+});
+
+test("admin can update their own profile from the admin profile endpoint", async () => {
+  const { adminUser, tokens } = fixture;
+
+  const updateResponse = await request(app)
+    .patch("/api/v1/admin/profile")
+    .set("Authorization", `Bearer ${tokens.admin}`)
+    .field("fullName", "Updated Admin User")
+    .field("bio", "Updated admin bio");
+
+  assert.equal(updateResponse.status, 200);
+  assert.equal(updateResponse.body.data.profile.fullName, "Updated Admin User");
+  assert.equal(updateResponse.body.data.profile.bio, "Updated admin bio");
+
+  const updatedAdmin = await User.findById(adminUser._id);
+  assert.equal(updatedAdmin.fullName, "Updated Admin User");
+  assert.equal(updatedAdmin.bio, "Updated admin bio");
 });

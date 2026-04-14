@@ -26,6 +26,14 @@ const createBaseFixture = async () => {
     role: "admin",
   });
 
+  const ownerUser = await User.create({
+    fullName: "Owner User",
+    username: "owner",
+    email: "owner@example.com",
+    password: "Password@123",
+    role: "user",
+  });
+
   const applicantUser = await User.create({
     fullName: "Author Applicant",
     username: "authorapplicant",
@@ -74,6 +82,7 @@ const createBaseFixture = async () => {
 
   return {
     adminUser,
+    ownerUser,
     applicantUser,
     commenterUser,
     posts: {
@@ -83,6 +92,7 @@ const createBaseFixture = async () => {
     },
     tokens: {
       admin: makeAccessToken(adminUser._id.toString()),
+      owner: makeAccessToken(ownerUser._id.toString()),
       applicant: makeAccessToken(applicantUser._id.toString()),
       commenter: makeAccessToken(commenterUser._id.toString()),
     },

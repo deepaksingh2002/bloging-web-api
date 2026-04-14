@@ -8,6 +8,9 @@ import { ModerationLog } from "../models/moderationLog.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { hasAdminAccess } from "../middlewares/role.middleware.js";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
+import fs from "fs";
 import mongoose from "mongoose";
 
 const firstCount = (arr, key = "count") => (arr?.[0]?.[key] || 0);
@@ -616,6 +619,55 @@ const getAdminProfile = asyncHandler(async (req, res) => {
   );
 });
 
+const updateAdminProfile = asyncHandler(async (req, res) => {
+  const adminId = req.user?._id;
+  const { fullName, bio } = req.body;
+  const avatarLocalPath = req.file?.path;
+
+  const user = await User.findById(adminId);
+  if (!user) {
+    throw new ApiError(404, "Admin user not found");
+  }
+
+  const updatedData = {};
+  if (fullName !== undefined) updatedData.fullName = String(fullName).trim();
+  if (bio !== undefined) updatedData.bio = String(bio).trim();
+
+  let uploadedAvatar = null;
+  if (avatarLocalPath) {
+    uploadedAvatar = await uploadOnCloudinary(avatarLocalPath);
+    await fs.promises.unlink(avatarLocalPath);
+
+    if (!uploadedAvatar?.url) {
+      throw new ApiError(500, "Error while uploading avatar");
+    }
+  }
+
+  if (!Object.keys(updatedData).length && !uploadedAvatar) {
+    throw new ApiError(400, "At least one field is required to update profile");
+  }
+
+  const previousAvatar = user.avatar;
+  if (updatedData.fullName !== undefined) user.fullName = updatedData.fullName;
+  if (updatedData.bio !== undefined) user.bio = updatedData.bio;
+  if (uploadedAvatar?.url) user.avatar = uploadedAvatar.url;
+
+  await user.save({ validateBeforeSave: true });
+
+  if (previousAvatar && uploadedAvatar?.url && previousAvatar !== uploadedAvatar.url) {
+    const publicId = previousAvatar.split("/").pop().split(".")[0];
+    await deleteFromCloudinary(publicId);
+  }
+
+  const updatedAdmin = await User.findById(adminId)
+    .select("_id fullName username email avatar bio role createdAt updatedAt")
+    .lean();
+
+  return res.status(200).json(
+    new ApiResponse(200, { profile: updatedAdmin }, "Admin profile updated successfully")
+  );
+});
+
 const deleteAnyPost = asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const reason = req.body?.reason || req.query?.reason || "";
@@ -727,8 +779,7 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid user id");
   }
 
-  const requesterRole = String(req.user?.role || "").trim().toLowerCase();
-  if (!["admin", "superadmin"].includes(requesterRole)) {
+  if (!hasAdminAccess(req)) {
     throw new ApiError(403, "Only admin can delete users");
   }
 
@@ -842,6 +893,7 @@ export {
   getAdminUserProfile,
   getAdminDashboard,
   getAdminProfile,
+  updateAdminProfile,
   deleteAnyPost,
   deleteAnyComment,
   deleteUserAccount,
