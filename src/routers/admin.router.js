@@ -12,6 +12,7 @@ import {
   deleteAnyComment,
   deleteUserAccount,
   getModerationLogs,
+  getOpenReports,
 } from "../controllers/admin.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { requireAdmin } from "../middlewares/role.middleware.js";
@@ -28,6 +29,7 @@ router.patch("/profile", upload.single("avatar"), updateAdminProfile);
 router.get("/users", getAdminUsers);
 router.get("/users/:userId", getAdminUserProfile);
 router.get("/moderation-logs", getModerationLogs);
+router.get("/reports", getOpenReports);
 router.delete("/posts/:postId", deleteAnyPost);
 router.delete("/comments/:commentId", deleteAnyComment);
 router.delete("/users/:userId", deleteUserAccount);
