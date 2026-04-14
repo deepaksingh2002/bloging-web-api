@@ -5,6 +5,7 @@ import { Like } from "../models/likes.model.js";
 import { Subscription } from "../models/subscription.model.js";
 import { AboutProfile } from "../models/aboutProfile.model.js";
 import { ModerationLog } from "../models/moderationLog.model.js";
+import { Report } from "../models/report.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -885,6 +886,71 @@ const getModerationLogs = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, logs, "Moderation logs fetched successfully"));
 });
 
+const getOpenReports = asyncHandler(async (req, res) => {
+  const limit = Math.min(Math.max(Number(req.query?.limit) || 25, 1), 100);
+
+  const reports = await Report.aggregate([
+    { $match: { status: "open" } },
+    { $sort: { createdAt: -1 } },
+    { $limit: limit },
+    {
+      $lookup: {
+        from: "users",
+        localField: "reporter",
+        foreignField: "_id",
+        as: "reporterUser",
+      },
+    },
+    { $unwind: { path: "$reporterUser", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "posts",
+        localField: "post",
+        foreignField: "_id",
+        as: "postData",
+      },
+    },
+    { $unwind: { path: "$postData", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "comments",
+        localField: "targetId",
+        foreignField: "_id",
+        as: "commentData",
+      },
+    },
+    { $unwind: { path: "$commentData", preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        _id: 1,
+        targetType: 1,
+        targetId: 1,
+        post: "$postData._id",
+        reason: 1,
+        status: 1,
+        createdAt: 1,
+        reporter: {
+          _id: "$reporterUser._id",
+          username: "$reporterUser.username",
+          fullName: "$reporterUser.fullName",
+          email: "$reporterUser.email",
+        },
+        postInfo: {
+          _id: "$postData._id",
+          title: "$postData.title",
+        },
+        commentInfo: {
+          _id: "$commentData._id",
+          post: "$commentData.post",
+          content: "$commentData.content",
+        },
+      },
+    },
+  ]);
+
+  return res.status(200).json(new ApiResponse(200, reports, "Open reports fetched successfully"));
+});
+
 export {
   getPendingAuthorApplications,
   reviewAuthorApplication,
@@ -898,4 +964,5 @@ export {
   deleteAnyComment,
   deleteUserAccount,
   getModerationLogs,
+  getOpenReports,
 };
