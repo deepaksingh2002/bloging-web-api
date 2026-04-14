@@ -10,6 +10,7 @@ import { Like } from "../src/models/likes.model.js";
 import { Subscription } from "../src/models/subscription.model.js";
 import { AboutProfile } from "../src/models/aboutProfile.model.js";
 import { ModerationLog } from "../src/models/moderationLog.model.js";
+import { Report } from "../src/models/report.model.js";
 import { setCloudinaryHandlersForTests } from "../src/utils/cloudinary.js";
 
 let mongod;
@@ -120,6 +121,7 @@ const clearRoleAccessCollections = async () => {
     Subscription.deleteMany({}),
     AboutProfile.deleteMany({}),
     ModerationLog.deleteMany({}),
+    Report.deleteMany({}),
   ]);
 };
 
