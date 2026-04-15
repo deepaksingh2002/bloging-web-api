@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import fs from "fs";
 import { Post } from "../models/post.model.js";
 import { Comment } from "../models/comment.model.js";
 import { Like } from "../models/likes.model.js";
@@ -6,6 +7,7 @@ import { User } from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const firstValue = (arr, key = "count") => (arr?.[0]?.[key] || 0);
 
@@ -264,6 +266,55 @@ const getAuthorProfile = asyncHandler(async (req, res) => {
   );
 });
 
+const updateAuthorProfile = asyncHandler(async (req, res) => {
+  const authorId = req.user?._id;
+  const { fullName, bio } = req.body;
+  const avatarLocalPath = req.file?.path;
+
+  const user = await User.findById(authorId);
+  if (!user) {
+    throw new ApiError(404, "Author not found");
+  }
+
+  const updatedData = {};
+  if (fullName !== undefined) updatedData.fullName = String(fullName).trim();
+  if (bio !== undefined) updatedData.bio = String(bio).trim();
+
+  let uploadedAvatar = null;
+  if (avatarLocalPath) {
+    uploadedAvatar = await uploadOnCloudinary(avatarLocalPath);
+    await fs.promises.unlink(avatarLocalPath);
+
+    if (!uploadedAvatar?.url) {
+      throw new ApiError(500, "Error while uploading avatar");
+    }
+  }
+
+  if (!Object.keys(updatedData).length && !uploadedAvatar) {
+    throw new ApiError(400, "At least one field is required to update profile");
+  }
+
+  const previousAvatar = user.avatar;
+  if (updatedData.fullName !== undefined) user.fullName = updatedData.fullName;
+  if (updatedData.bio !== undefined) user.bio = updatedData.bio;
+  if (uploadedAvatar?.url) user.avatar = uploadedAvatar.url;
+
+  await user.save({ validateBeforeSave: true });
+
+  if (previousAvatar && uploadedAvatar?.url && previousAvatar !== uploadedAvatar.url) {
+    const publicId = previousAvatar.split("/").pop().split(".")[0];
+    await deleteFromCloudinary(publicId);
+  }
+
+  const updatedAuthor = await User.findById(authorId)
+    .select("_id fullName username email avatar bio role createdAt updatedAt")
+    .lean();
+
+  return res.status(200).json(
+    new ApiResponse(200, { profile: updatedAuthor }, "Author profile updated successfully")
+  );
+});
+
 const getManagedPosts = asyncHandler(async (req, res) => {
   const authorId = new mongoose.Types.ObjectId(req.user._id);
   const page = Math.max(Number(req.query?.page) || 1, 1);
@@ -334,4 +385,4 @@ const getManagedPosts = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, posts, "Author managed posts fetched successfully"));
 });
 
-export { getAuthorDashboard, getAuthorProfile, getManagedPosts };
+export { getAuthorDashboard, getAuthorProfile, updateAuthorProfile, getManagedPosts };
