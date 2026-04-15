@@ -25,11 +25,13 @@ const userProfile = asyncHandler(async (req, res) => {
  * Update editable profile fields (fullName, bio).
  */
 const updateUserProfile = asyncHandler(async (req, res) => {
-  const { fullName, bio } = req.body;
+  const { fullName, bio, username, email } = req.body;
 
   const updatedData = {};
-  if (fullName !== undefined) updatedData.fullName = fullName;
-  if (bio !== undefined) updatedData.bio = bio;
+  if (fullName !== undefined) updatedData.fullName = String(fullName).trim();
+  if (bio !== undefined) updatedData.bio = String(bio).trim();
+  if (username !== undefined) updatedData.username = String(username).trim().toLowerCase();
+  if (email !== undefined) updatedData.email = String(email).trim().toLowerCase();
 
   if (Object.keys(updatedData).length === 0) {
     throw new ApiError(400, "At least one field is required to update profile");
