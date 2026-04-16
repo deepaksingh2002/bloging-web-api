@@ -41,6 +41,7 @@ import commentRouter from "./routers/comment.router.js";
 import resumeRouter from "./routers/resume.router.js";
 import adminRouter from "./routers/admin.router.js";
 import authorRouter from "./routers/author.router.js";
+import healthRouter from "./routers/health.router.js";
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/post", postRouter);
@@ -50,6 +51,7 @@ app.use("/api/v1/comments", commentRouter);
 app.use("/api/v1/about", resumeRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/author", authorRouter);
+app.use("/api/health", healthRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
